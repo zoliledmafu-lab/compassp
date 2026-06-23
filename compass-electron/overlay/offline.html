@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a; color: #e2e8f0;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center;
+  }
+  .box { max-width: 420px; }
+  .icon { font-size: 48px; margin-bottom: 16px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  p  { color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+  code {
+    background: #1e1e2e; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px; padding: 10px 16px; display: block;
+    font-family: monospace; font-size: 13px; color: #818cf8;
+    text-align: left; margin-bottom: 24px;
+  }
+  button {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white; border: none; border-radius: 10px;
+    padding: 10px 24px; font-size: 14px; cursor: pointer;
+  }
+  button:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="icon">🧭</div>
+  <h1>Compass isn't running</h1>
+  <p>Start the Compass web app first, then relaunch this companion.</p>
+  <code>cd "Compass Prototype"<br>npm run dev</code>
+  <button onclick="location.reload()">Retry connection</button>
+</div>
+</body>
+</html>

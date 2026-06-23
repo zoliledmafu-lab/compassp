@@ -1,0 +1,32 @@
+{
+  "name": "compass-companion",
+  "version": "1.0.0",
+  "description": "Compass AI screen companion — cursor follower, annotations, auto-click",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "concurrently -n main,tsc \"electron .\" \"tsc -w --project tsconfig.json\"",
+    "build": "tsc --project tsconfig.json",
+    "start": "npm run build && electron .",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "postinstall": "echo skipped native rebuild"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "concurrently": "^8.2.2",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "typescript": "^5.4.5"
+  },
+  "build": {
+    "appId": "com.compass.companion",
+    "productName": "Compass Companion",
+    "files": ["dist/**/*", "overlay/**/*"],
+    "mac": { "target": "dmg", "category": "public.app-category.education" },
+    "win": { "target": "nsis" },
+    "linux": { "target": "AppImage" }
+  }
+}

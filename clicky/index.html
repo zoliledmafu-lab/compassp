@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clicky — Compass Voice Companion</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d14;
+      --surface:  #13131f;
+      --border:   #1f1f35;
+      --purple:   #7c3aed;
+      --purple-l: #a855f7;
+      --blue:     #3b82f6;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --amber:    #f59e0b;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 16px 40px;
+      gap: 28px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .logo { font-size: 2rem; line-height: 1; }
+    .header-text h1 { font-size: 1.25rem; font-weight: 700; }
+    .header-text p  { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Status ring ── */
+    .status-ring {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 3px solid var(--border);
+      transition: border-color 0.25s, box-shadow 0.25s;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      background: var(--surface);
+    }
+    .status-ring[data-state="listening"] {
+      border-color: var(--red);
+      box-shadow: 0 0 0 8px rgba(239,68,68,0.15), 0 0 0 18px rgba(239,68,68,0.05);
+      animation: pulse 1.2s infinite;
+    }
+    .status-ring[data-state="thinking"] {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 8px rgba(59,130,246,0.15);
+      animation: spin-ring 2s linear infinite;
+    }
+    .status-ring[data-state="speaking"] {
+      border-color: var(--green);
+      box-shadow: 0 0 0 8px rgba(34,197,94,0.15);
+    }
+    .status-ring[data-state="idle"] {
+      border-color: var(--border);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 8px rgba(239,68,68,0.15), 0 0 0 18px rgba(239,68,68,0.05); }
+      50%       { box-shadow: 0 0 0 14px rgba(239,68,68,0.2), 0 0 0 28px rgba(239,68,68,0.05); }
+    }
+    @keyframes spin-ring {
+      to { transform: rotate(360deg); }
+    }
+
+    .ring-icon  { font-size: 2.8rem; line-height: 1; }
+    .ring-label { font-size: 0.8rem; color: var(--muted); text-align: center; padding: 0 16px; }
+
+    /* ── Hold-to-talk instruction ── */
+    .ptk-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    kbd {
+      background: var(--border);
+      border: 1px solid #2d2d50;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.7rem;
+      font-family: monospace;
+    }
+
+    /* ── Transcript / response panel ── */
+    .panel {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .panel-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .panel-text {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--text);
+      min-height: 36px;
+    }
+    .panel-text.dim { color: var(--muted); }
+
+    /* ── Settings ── */
+    details {
+      width: 100%;
+      max-width: 420px;
+    }
+    summary {
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--muted);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before { content: '⚙️'; }
+
+    .settings-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-top: 8px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .field input, .field select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--purple); }
+
+    .save-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn {
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--purple-l); }
+    .btn.secondary { background: var(--border); }
+    .btn.secondary:hover { background: #2d2d50; }
+    .saved-msg { font-size: 0.75rem; color: var(--green); }
+
+    /* ── Stop button ── */
+    .stop-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .stop-btn:hover { color: var(--red); border-color: var(--red); }
+    .stop-btn.visible { display: inline-flex; align-items: center; gap: 6px; }
+
+    /* ── Open Compass link ── */
+    .open-link {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .open-link:hover { color: var(--purple-l); }
+
+    /* ── Waves (speaking indicator) ── */
+    .waves {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 24px;
+      visibility: hidden;
+    }
+    .waves.active { visibility: visible; }
+    .wave-bar {
+      width: 3px;
+      background: var(--green);
+      border-radius: 2px;
+      animation: wave 0.8s ease-in-out infinite alternate;
+    }
+    .wave-bar:nth-child(1) { animation-delay: 0s;    height: 8px; }
+    .wave-bar:nth-child(2) { animation-delay: 0.1s;  height: 16px; }
+    .wave-bar:nth-child(3) { animation-delay: 0.2s;  height: 24px; }
+    .wave-bar:nth-child(4) { animation-delay: 0.15s; height: 16px; }
+    .wave-bar:nth-child(5) { animation-delay: 0.05s; height: 8px; }
+    @keyframes wave {
+      from { transform: scaleY(0.4); }
+      to   { transform: scaleY(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">🧭</div>
+    <div class="header-text">
+      <h1>Clicky</h1>
+      <p>Compass Voice Companion — tap or hold Space to talk</p>
+    </div>
+  </div>
+
+  <!-- Main push-to-talk ring -->
+  <div id="ring" class="status-ring" data-state="idle"
+       role="button" aria-label="Push to talk"
+       tabindex="0">
+    <div class="ring-icon" id="ring-icon">🧭</div>
+    <div class="ring-label" id="ring-label">Hold to Talk</div>
+  </div>
+
+  <!-- Waves -->
+  <div class="waves" id="waves">
+    <div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+  </div>
+
+  <p class="ptk-hint">Click & hold · or hold <kbd>Space</kbd> · release to send</p>
+
+  <!-- Stop button (visible while speaking) -->
+  <button class="stop-btn" id="stop-btn" onclick="stopSpeaking()">
+    ⏹ Stop speaking
+  </button>
+
+  <!-- Transcript panel -->
+  <div class="panel">
+    <div class="panel-label">You said</div>
+    <div class="panel-text dim" id="transcript-text">—</div>
+  </div>
+
+  <!-- Response panel -->
+  <div class="panel">
+    <div class="panel-label">Compass says</div>
+    <div class="panel-text dim" id="response-text">—</div>
+  </div>
+
+  <!-- Settings -->
+  <details id="settings-details">
+    <summary>Settings</summary>
+    <div class="settings-grid">
+      <div class="field">
+        <label>Edge Function URL</label>
+        <input type="url" id="edge-url"
+          placeholder="https://…supabase.co/functions/v1/voice-companion" />
+      </div>
+      <div class="field">
+        <label>Student ID (Supabase user UUID)</label>
+        <input type="text" id="student-id" placeholder="Paste from Compass account" />
+      </div>
+      <div class="field">
+        <label>Voice</label>
+        <select id="voice-gender">
+          <option value="female">Female (Sarah)</option>
+          <option value="male">Male (Liam)</option>
+        </select>
+      </div>
+      <div class="save-row">
+        <button class="btn" onclick="saveSettings()">Save</button>
+        <span class="saved-msg" id="saved-msg" hidden>Saved ✓</span>
+      </div>
+    </div>
+  </details>
+
+  <a href="http://localhost:5174" target="_blank" class="open-link" id="compass-link">
+    Open Compass app ↗
+  </a>
+
+  <script>
+    // ── State ─────────────────────────────────────────────────────
+    let state       = 'idle'
+    let recognition = null
+    let audioPlayer = null
+    let isHolding   = false
+
+    const ring      = document.getElementById('ring')
+    const ringIcon  = document.getElementById('ring-icon')
+    const ringLabel = document.getElementById('ring-label')
+    const waves     = document.getElementById('waves')
+    const stopBtn   = document.getElementById('stop-btn')
+    const txText    = document.getElementById('transcript-text')
+    const respText  = document.getElementById('response-text')
+
+    const ICONS   = { idle: '🧭', listening: '🎙️', thinking: '⚙️', speaking: '🔊' }
+    const LABELS  = { idle: 'Hold to Talk', listening: 'Listening… release to send', thinking: 'Thinking…', speaking: 'Speaking…' }
+
+    // ── Settings ──────────────────────────────────────────────────
+    const EDGE_FUNCTION_DEFAULT = 'https://rxpdespqcaiqrlzfnrtw.supabase.co/functions/v1/voice-companion'
+
+    function loadSettings() {
+      document.getElementById('edge-url').value    = localStorage.getItem('clicky_edge_url')    || ''
+      document.getElementById('student-id').value  = localStorage.getItem('clicky_student_id')  || ''
+      document.getElementById('voice-gender').value = localStorage.getItem('clicky_voice_gender') || 'female'
+    }
+    function saveSettings() {
+      localStorage.setItem('clicky_edge_url',     document.getElementById('edge-url').value.trim())
+      localStorage.setItem('clicky_student_id',   document.getElementById('student-id').value.trim())
+      localStorage.setItem('clicky_voice_gender', document.getElementById('voice-gender').value)
+      const msg = document.getElementById('saved-msg')
+      msg.hidden = false
+      setTimeout(() => { msg.hidden = true }, 2000)
+    }
+    function getSetting(key, fallback = '') {
+      return localStorage.getItem(key) || fallback
+    }
+    loadSettings()
+
+    // ── UI state ─────────────────────────────────────────────────
+    function setState(s) {
+      state = s
+      ring.setAttribute('data-state', s)
+      ringIcon.textContent  = ICONS[s]  || '🧭'
+      ringLabel.textContent = LABELS[s] || s
+      waves.className = s === 'speaking' ? 'waves active' : 'waves'
+      stopBtn.className = s === 'speaking' ? 'stop-btn visible' : 'stop-btn'
+    }
+
+    // ── Push-to-talk events ───────────────────────────────────────
+    ring.addEventListener('mousedown',  (e) => { e.preventDefault(); startListening() })
+    ring.addEventListener('mouseup',    ()  => stopListening())
+    ring.addEventListener('mouseleave', ()  => { if (isHolding) stopListening() })
+    ring.addEventListener('touchstart', (e) => { e.preventDefault(); startListening() }, { passive: false })
+    ring.addEventListener('touchend',   (e) => { e.preventDefault(); stopListening() })
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.repeat && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'SELECT') {
+        e.preventDefault()
+        startListening()
+      }
+    })
+    document.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') stopListening()
+    })
+
+    // ── Speech Recognition ────────────────────────────────────────
+    function startListening() {
+      if (state !== 'idle' || isHolding) return
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+      if (!SR) {
+        ringLabel.textContent = 'Voice not supported — try Chrome'
+        return
+      }
+
+      isHolding = true
+      setState('listening')
+      txText.textContent  = '…'
+      txText.classList.add('dim')
+      respText.textContent = '—'
+      respText.classList.add('dim')
+
+      recognition = new SR()
+      recognition.lang              = 'en-US'
+      recognition.interimResults    = false
+      recognition.maxAlternatives   = 1
+      recognition.continuous        = false
+
+      let transcript = ''
+      recognition.onresult = (e) => { transcript = e.results[0][0].transcript }
+      recognition.onerror  = () => { isHolding = false; setState('idle') }
+      recognition.onend    = () => {
+        isHolding = false
+        if (transcript) {
+          txText.textContent = transcript
+          txText.classList.remove('dim')
+          submitQuery(transcript)
+        } else {
+          setState('idle')
+        }
+      }
+      recognition.start()
+    }
+
+    function stopListening() {
+      if (!isHolding) return
+      isHolding = false
+      recognition?.stop()
+    }
+
+    // ── Query Edge Function ───────────────────────────────────────
+    async function submitQuery(transcript) {
+      setState('thinking')
+      respText.textContent = '…'
+      respText.classList.add('dim')
+
+      const url       = getSetting('clicky_edge_url') || EDGE_FUNCTION_DEFAULT
+      const studentId = getSetting('clicky_student_id')
+      const gender    = getSetting('clicky_voice_gender', 'female')
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            screenshot_base64: '',   // no screenshot in standalone mode
+            transcript,
+            student_id:   studentId,
+            mode:         'browser',
+            app_detected: 'Clicky standalone',
+            voice_gender: gender,
+          }),
+        })
+
+        if (!res.ok) {
+          const txt = await res.text()
+          throw new Error(`${res.status}: ${txt}`)
+        }
+
+        const data = await res.json()
+        const text = data.response_text || ''
+
+        respText.textContent = text
+        respText.classList.remove('dim')
+
+        if (data.audio_base64) {
+          playAudio(data.audio_base64, text)
+        } else {
+          speakWebSpeech(text, gender)
+        }
+
+      } catch (err) {
+        console.error(err)
+        respText.textContent = `Error: ${err.message}. Check your Edge Function URL in Settings.`
+        respText.classList.remove('dim')
+        setState('idle')
+      }
+    }
+
+    // ── Audio playback ────────────────────────────────────────────
+    function playAudio(base64, fallbackText) {
+      setState('speaking')
+      try {
+        const bytes  = atob(base64)
+        const arr    = new Uint8Array(bytes.length)
+        for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i)
+        const blob   = new Blob([arr], { type: 'audio/mpeg' })
+        const objUrl = URL.createObjectURL(blob)
+        audioPlayer  = new Audio(objUrl)
+        audioPlayer.onended = () => { setState('idle'); URL.revokeObjectURL(objUrl) }
+        audioPlayer.onerror = () => speakWebSpeech(fallbackText, getSetting('clicky_voice_gender', 'female'))
+        audioPlayer.play()
+      } catch {
+        speakWebSpeech(fallbackText, getSetting('clicky_voice_gender', 'female'))
+      }
+    }
+
+    function speakWebSpeech(text, gender) {
+      setState('speaking')
+      if (!('speechSynthesis' in window)) { setState('idle'); return }
+      speechSynthesis.cancel()
+      const utt = new SpeechSynthesisUtterance(text)
+      utt.rate  = 0.95
+
+      const voices = speechSynthesis.getVoices()
+      const pick   = voices.find(v =>
+        gender === 'female'
+          ? v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira')
+          : v.name.includes('Male')   || v.name.includes('Daniel')   || v.name.includes('David')
+      )
+      if (pick) utt.voice = pick
+      utt.onend   = () => setState('idle')
+      utt.onerror = () => setState('idle')
+      speechSynthesis.speak(utt)
+    }
+
+    function stopSpeaking() {
+      audioPlayer?.pause()
+      speechSynthesis?.cancel()
+      setState('idle')
+    }
+  </script>
+</body>
+</html>

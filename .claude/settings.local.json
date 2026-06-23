@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Start-Process \"http://localhost:5173\")",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 5 2>&1)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 4 2>&1)",
+      "PowerShell(Start-Process \"http://localhost:5173/canvas\")",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(npx vite *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "PowerShell(Start-Process -FilePath \"cmd.exe\" -ArgumentList \"/c cd `\"C:\\\\Users\\\\hp\\\\Desktop\\\\Compass Prototype`\" && npx vite --port 5173\" -WindowStyle Normal)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\hp\\\\Desktop\\\\Compass Prototype\\\\supabase\")",
+      "PowerShell(Start-Process \"http://localhost:5200/test-highlights.html\")",
+      "Bash(node -e \"const p = require\\('./package.json'\\); const v = p.dependencies['lucide-react']; console.log\\('lucide version:', v\\)\")",
+      "PowerShell(npm show lucide-react version 2>&1)",
+      "PowerShell(Stop-Process -Name \"node\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(npm run *)",
+      "Read(//tmp/**)",
+      "Bash(sleep 4 && cat /tmp/vite.log)",
+      "PowerShell(Start-Process -FilePath \"cmd.exe\" -ArgumentList \"/c\", \"cd /d `\"C:\\\\Users\\\\hp\\\\Desktop\\\\Compass Prototype`\" && npm run dev\" -WindowStyle Normal)",
+      "PowerShell(Start-Process -FilePath \"cmd.exe\" -ArgumentList \"/c\", \"cd /d `\"C:\\\\Users\\\\hp\\\\Desktop\\\\Compass Prototype\\\\compass-electron`\" && npx electron .\" -WindowStyle Normal)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\hp\\Desktop\\Compass Prototype"
+    ]
+  }
+}
