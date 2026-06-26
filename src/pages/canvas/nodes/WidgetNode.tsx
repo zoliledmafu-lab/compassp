@@ -102,16 +102,16 @@ export function WidgetNode({ id, data, selected }: Props) {
             <span className="text-base">{plugin.icon}</span>
             <span className="text-xs font-semibold text-purple-200">{plugin.name}</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="nodrag flex items-center gap-1">
             <button
-              onMouseDown={e => { e.stopPropagation(); onBranch(id) }}
+              onClick={e => { e.stopPropagation(); onBranch(id) }}
               className="p-1 rounded-lg text-slate-500 hover:text-purple-300 hover:bg-purple-500/10 transition-all"
               title="Branch from widget"
             >
               <GitBranch size={12} />
             </button>
             <button
-              onMouseDown={e => { e.stopPropagation(); onDelete(id) }}
+              onClick={e => { e.stopPropagation(); onDelete(id) }}
               className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all"
               title="Delete widget"
             >

@@ -8,7 +8,7 @@ import '@xyflow/react/dist/style.css'
 import { v4 as uuid } from 'uuid'
 import {
   Plus, Image, Sparkles, Clock, List,
-  ChevronRight, BarChart2
+  ChevronRight, BarChart2, ZoomIn, ZoomOut, Maximize2
 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 
@@ -25,7 +25,8 @@ import { ListView } from './panels/ListView'
 import { loadCanvas, saveCanvas, resizeImage } from './storage'
 import type { CanvasRFNode, TextNodeData, ImageNodeData, BranchNodeData, WidgetRFNodeData } from './types'
 import { SUBJECTS } from '../../lib/subjects'
-import { getAllPlugins } from '../../widgets/registry'
+import { getAllPlugins, getPluginsForSubject } from '../../widgets/registry'
+import { getPinnedSubjects } from '../../lib/pinnedSubjects'
 import { DEFAULT_WIDGET_NODE_DATA } from '../../widgets/types'
 
 // Register custom node types OUTSIDE component to avoid re-mount
@@ -42,7 +43,7 @@ type PanelMode = 'none' | 'branch' | 'quiz' | 'exam' | 'list'
 
 function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubjectChange: (id: string) => void }) {
   const { user } = useAuth()
-  const { fitView, setCenter, screenToFlowPosition } = useReactFlow()
+  const { fitView, setCenter, screenToFlowPosition, zoomIn, zoomOut } = useReactFlow()
 
   const [nodes, setNodes, onNodesChange] = useNodesState<CanvasRFNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -309,20 +310,26 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
                 color="purple"
               />
               {widgetMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 w-52 glass-dark rounded-2xl shadow-2xl border border-white/10 z-50 py-2">
-                  {getAllPlugins().map(p => (
-                    <button
-                      key={p.id}
-                      onClick={() => { addWidgetNode(p.id); setWidgetMenuOpen(false) }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-all text-left"
-                    >
-                      <span>{p.icon}</span>
-                      <div>
-                        <div className="font-medium text-xs">{p.name}</div>
-                        <div className="text-slate-500 text-xs leading-tight">{p.description.substring(0, 48)}…</div>
-                      </div>
-                    </button>
-                  ))}
+                <div className="absolute top-full left-0 mt-2 w-56 glass-dark rounded-2xl shadow-2xl border border-white/10 z-50 py-2">
+                  {(() => {
+                    const subjectPlugins = getPluginsForSubject(subjectId)
+                    if (subjectPlugins.length === 0) return (
+                      <p className="px-3 py-2 text-xs text-slate-500">No widgets for this subject yet.</p>
+                    )
+                    return subjectPlugins.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => { addWidgetNode(p.id); setWidgetMenuOpen(false) }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-all text-left"
+                      >
+                        <span className="text-base">{p.icon}</span>
+                        <div>
+                          <div className="font-medium text-xs">{p.name}</div>
+                          <div className="text-slate-500 text-xs leading-tight">{p.description.substring(0, 52)}…</div>
+                        </div>
+                      </button>
+                    ))
+                  })()}
                 </div>
               )}
             </div>
@@ -333,6 +340,10 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
             <ToolBtn icon={<Clock size={16} />} label="Exam" onClick={() => openPanel('exam')} active={panelMode === 'exam'} color="cyan" />
             <div className="w-px h-6 bg-white/10" />
             <ToolBtn icon={<List size={16} />} label="List" onClick={() => openPanel('list')} active={panelMode === 'list'} color="slate" />
+            <div className="w-px h-6 bg-white/10" />
+            <button onClick={() => zoomOut({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom out"><ZoomOut size={15} /></button>
+            <button onClick={() => zoomIn({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom in"><ZoomIn size={15} /></button>
+            <button onClick={() => fitView({ padding: 0.12, duration: 400 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Fit view"><Maximize2 size={15} /></button>
           </div>
 
           {/* Node count badge */}
@@ -477,11 +488,14 @@ function ToolBtn({ icon, label, onClick, active, color = 'indigo' }: ToolBtnProp
   )
 }
 
-// ─── Subject selector ────────────────────────────────────────────
+// ─── Subject selector (pinned subjects only) ─────────────────────
 
 function SubjectSelector({ subjectId, onChange }: { subjectId: string; onChange: (id: string) => void }) {
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
-  const subject = SUBJECTS.find(s => s.id === subjectId) || SUBJECTS[0]
+  const pinned = user ? getPinnedSubjects(user.id) : []
+  const list = pinned.length > 0 ? pinned : SUBJECTS
+  const subject = SUBJECTS.find(s => s.id === subjectId) || list[0] || SUBJECTS[0]
   return (
     <div className="relative">
       <button
@@ -493,8 +507,11 @@ function SubjectSelector({ subjectId, onChange }: { subjectId: string; onChange:
         <ChevronRight size={12} className="text-slate-400" />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-2 w-48 glass-dark rounded-2xl shadow-2xl border border-white/10 z-50 py-2 max-h-72 overflow-y-auto">
-          {SUBJECTS.map(s => (
+        <div className="absolute top-full left-0 mt-2 w-52 glass-dark rounded-2xl shadow-2xl border border-white/10 z-50 py-2 max-h-72 overflow-y-auto">
+          {pinned.length === 0 && (
+            <p className="px-3 py-1 text-xs text-slate-500">Pin subjects on the Dashboard to filter this list.</p>
+          )}
+          {list.map(s => (
             <button
               key={s.id}
               onClick={() => { onChange(s.id); setOpen(false) }}

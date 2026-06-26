@@ -77,6 +77,63 @@ Or one-click deploy to Vercel:
 
 ---
 
+---
+
+## 6 — Enable Google OAuth
+
+### Step A — Google Cloud Console
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**
+2. Click **Create Credentials** → **OAuth 2.0 Client ID** → Application type: **Web application**
+3. Under **Authorised JavaScript origins**, add:
+   - `https://rxpdespqcaiqrlzfnrtw.supabase.co`
+4. Under **Authorised redirect URIs**, add:
+   - `https://rxpdespqcaiqrlzfnrtw.supabase.co/auth/v1/callback`
+5. Click **Create** — copy the **Client ID** and **Client Secret**
+
+### Step B — Supabase Dashboard
+
+6. Go to: https://supabase.com/dashboard/project/rxpdespqcaiqrlzfnrtw/auth/providers
+7. Click **Google** → toggle **Enable** → paste **Client ID** and **Client Secret** → **Save**
+
+### Step C — Allow Redirect URLs (critical — missed step)
+
+8. Go to: https://supabase.com/dashboard/project/rxpdespqcaiqrlzfnrtw/auth/url-configuration
+9. Under **Redirect URLs**, add:
+   - `http://localhost:5173/**`  ← for local development
+   - Your production URL when you deploy (e.g. `https://compass.vercel.app/**`)
+10. Click **Save**
+
+> **The "Continue with Google" button is already wired up.** Once all three steps above are done, Google sign-in works immediately. If it still fails, the error message will now appear on the login page.
+
+---
+
+## 7 — Custom Email Verification (optional)
+
+Supabase sends verification emails by default from `noreply@mail.supabase.io`.
+To use your own domain and branding, choose one of:
+
+| Provider | Cost | Steps |
+|----------|------|-------|
+| **Resend** (recommended) | Free up to 3k/mo | resend.com → API key → Supabase: Auth → SMTP settings |
+| **SendGrid** | Free up to 100/day | sendgrid.com → SMTP relay → Supabase SMTP settings |
+| **Postmark** | $15/mo starter | postmarkapp.com → SMTP credentials → Supabase SMTP settings |
+| **AWS SES** | ~$0.10/1k emails | SES → SMTP credentials → Supabase SMTP settings |
+
+**Supabase SMTP config path:** Supabase dashboard → Authentication → Email → SMTP Settings
+
+---
+
+## 8 — Run Curriculum Array Migration
+
+If you ran the earlier migrations, run this additional one to support multi-curriculum users:
+
+| Order | File | What it does |
+|-------|------|-------------|
+| 4 | `004_curricula_array.sql` | Adds `curricula text[]` to profiles, updates trigger to read from sign-up metadata |
+
+---
+
 ## Curriculum Coverage
 
 | Curriculum | Subjects | Notes |

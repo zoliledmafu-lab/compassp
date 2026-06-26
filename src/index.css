@@ -8,7 +8,10 @@
   }
 
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     background-color: #0f0f1a;
     color: #e2e8f0;
     min-height: 100vh;
@@ -48,8 +51,32 @@
     background-clip: text;
   }
 
-  .glow { box-shadow: 0 0 20px rgba(79, 70, 229, 0.35); }
+  .glow    { box-shadow: 0 0 20px rgba(79, 70, 229, 0.35); }
   .glow-sm { box-shadow: 0 0 10px rgba(79, 70, 229, 0.2); }
+
+  /* Apple-style 3D gradient icons */
+  .icon-3d {
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-3d-blue   { background: linear-gradient(145deg, #1e90ff 0%, #0055d4 100%); box-shadow: 0 4px 14px rgba(0,122,255,0.45), inset 0 1px 0 rgba(255,255,255,0.28); }
+  .icon-3d-indigo { background: linear-gradient(145deg, #7b7ff5 0%, #4f46e5 100%); box-shadow: 0 4px 14px rgba(94,92,230,0.45), inset 0 1px 0 rgba(255,255,255,0.28); }
+  .icon-3d-purple { background: linear-gradient(145deg, #c77df5 0%, #8b33d8 100%); box-shadow: 0 4px 14px rgba(191,90,242,0.45), inset 0 1px 0 rgba(255,255,255,0.28); }
+  .icon-3d-teal   { background: linear-gradient(145deg, #3dd2f0 0%, #0899c4 100%); box-shadow: 0 4px 14px rgba(50,210,230,0.45), inset 0 1px 0 rgba(255,255,255,0.28); }
+  .icon-3d-green  { background: linear-gradient(145deg, #40d870 0%, #1a9e40 100%); box-shadow: 0 4px 14px rgba(52,199,89,0.45),  inset 0 1px 0 rgba(255,255,255,0.28); }
+  .icon-3d-orange { background: linear-gradient(145deg, #ffb340 0%, #d07400 100%); box-shadow: 0 4px 14px rgba(255,149,0,0.45),  inset 0 1px 0 rgba(255,255,255,0.28); }
+
+  /* Apple-quality text number */
+  .stat-number {
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .gradient-card {
+    background: linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(124,58,237,0.08) 100%);
+  }
 }
 
 @keyframes slideUp {

@@ -75,22 +75,22 @@ export function BranchNode({ id, data, selected }: Props) {
 
         {/* Action bar */}
         {selected && (
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-[#1a1a2e] border border-white/10 rounded-xl px-2 py-1.5 shadow-xl z-10">
+          <div className="nodrag absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-[#1a1a2e] border border-white/10 rounded-xl px-2 py-1.5 shadow-xl z-10">
             <button
-              onMouseDown={e => { e.stopPropagation(); onOpenBranch(id) }}
+              onClick={e => { e.stopPropagation(); onOpenBranch(id) }}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-purple-300 hover:text-white hover:bg-purple-500/30 transition-all"
             >
               <MessageSquare size={12} /> Open
             </button>
             <button
-              onMouseDown={e => { e.stopPropagation(); onBranch(id) }}
+              onClick={e => { e.stopPropagation(); onBranch(id) }}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-indigo-300 hover:text-white hover:bg-indigo-500/30 transition-all"
             >
               <GitBranch size={12} /> Branch
             </button>
             <div className="w-px h-4 bg-white/10" />
             <button
-              onMouseDown={e => { e.stopPropagation(); onDelete(id) }}
+              onClick={e => { e.stopPropagation(); onDelete(id) }}
               className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all"
             >
               <Trash2 size={12} />

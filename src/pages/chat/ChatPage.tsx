@@ -13,6 +13,7 @@ import { supabase, SUPABASE_ENABLED } from '../../lib/supabase'
 import { buildSystemPrompt, detectDirectAnswerAttempt } from '../../lib/ruleEngine'
 import { streamCompletion, extractSessionInsights } from '../../lib/claudeApi'
 import { getSubject, SUBJECTS } from '../../lib/subjects'
+import { getPinnedSubjects, getCurriculumSubjects } from '../../lib/pinnedSubjects'
 import { Button } from '../../components/ui/Button'
 import { UploadPanel } from '../../components/chat/UploadPanel'
 import type { Message } from '../../lib/claudeApi'
@@ -97,8 +98,18 @@ export function ChatPage() {
   const { getMemory, updateMemory } = useMemory()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const subjectId = searchParams.get('subject') || SUBJECTS[0].id
-  const subject = getSubject(subjectId) || SUBJECTS[0]
+  // Determine subjects visible to this user
+  const curriculumSubjects = getCurriculumSubjects(user ?? null)
+  const pinned = user ? getPinnedSubjects(user.id) : []
+  // Picker shows pinned first (if any), then remaining curriculum subjects
+  const pinnedIds = pinned.map(s => s.id)
+  const pickerSubjects = pinned.length > 0
+    ? [...pinned, ...curriculumSubjects.filter(s => !pinnedIds.includes(s.id))]
+    : curriculumSubjects
+
+  const fallbackId = pinned[0]?.id ?? curriculumSubjects[0]?.id ?? SUBJECTS[0].id
+  const subjectId = searchParams.get('subject') || fallbackId
+  const subject = getSubject(subjectId) || curriculumSubjects[0] || SUBJECTS[0]
 
   const [messages, setMessages] = useState<Message[]>([])
   const [sessionBoundaries, setSessionBoundaries] = useState<number[]>([])
@@ -366,21 +377,32 @@ export function ChatPage() {
         </div>
       </header>
 
-      {/* Subject picker */}
+      {/* Subject picker — only pinned subjects */}
       {showSubjectPicker && (
-        <div className="glass-dark border-b border-white/8 px-4 py-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-          {SUBJECTS.map(s => (
-            <button
-              key={s.id}
-              onClick={() => { setSearchParams({ subject: s.id }); setShowSubjectPicker(false) }}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
-                s.id === subjectId ? 'gradient-primary text-white' : 'glass text-slate-300 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <span>{s.icon}</span>
-              <span className="truncate">{s.name}</span>
-            </button>
-          ))}
+        <div className="glass-dark border-b border-white/8 px-4 py-3">
+          {pinned.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center py-2">
+              No subjects pinned yet. Go to Dashboard to add subjects.
+            </p>
+          ) : (
+            <>
+              <p className="text-xs text-slate-600 font-medium uppercase tracking-wider mb-2">Your Subjects</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                {pinned.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => { setSearchParams({ subject: s.id }); setShowSubjectPicker(false) }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
+                      s.id === subjectId ? 'gradient-primary text-white' : 'glass text-slate-300 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <span>{s.icon}</span>
+                    <span className="truncate">{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 

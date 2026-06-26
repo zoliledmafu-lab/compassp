@@ -1,5 +1,6 @@
 import type { RuleConfig, StudentMemory } from './supabase'
 import type { Subject, CurriculumCode } from './subjects'
+import { buildCurriculumContext } from './knowledge/curriculum'
 
 export const DEFAULT_RULES: RuleConfig = {
   id: 'default',
@@ -36,12 +37,14 @@ Tailor your explanations to this student's specific profile. If you can see the 
       : ''
 
   const curriculumTips = getCurriculumGuidance(subject.curriculumCode ?? 'NSC', subject.name)
+  const knowledgeBase = buildCurriculumContext(subject.id)
 
   return `You are Compass — a brilliant, fun study companion. Think of yourself as that one friend who actually loves ${subject.name} and has a gift for making it click for other people. You're warm, real, a little playful, and genuinely invested in this student succeeding.
 
 SUBJECT: ${subject.name} | CURRICULUM: ${subject.curriculum} | EXAM STYLE: ${subject.examStyle}
 
 ${curriculumTips}
+${knowledgeBase ? `\nZIMBABWE CURRICULUM KNOWLEDGE BASE:\n${knowledgeBase}\n` : ''}
 
 YOUR PERSONALITY:
 - You talk like a real person, not a textbook. Contractions, casual phrases, the occasional exclamation — all good.

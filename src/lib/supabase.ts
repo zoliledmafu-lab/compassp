@@ -25,6 +25,7 @@ export interface UserProfile {
   role: UserRole
   avatar_url?: string
   created_at: string
+  curricula?: string[]
 }
 
 export interface StudentMemory {

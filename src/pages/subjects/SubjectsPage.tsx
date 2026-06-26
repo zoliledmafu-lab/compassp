@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, MessageSquare } from 'lucide-react'
 import { SUBJECTS, SUBJECTS_BY_CURRICULUM, CURRICULUM_META, type CurriculumCode } from '../../lib/subjects'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { useAuth } from '../../contexts/AuthContext'
 
 type Tab = 'ALL' | CurriculumCode
 
-const TABS: { id: Tab; label: string; flag: string }[] = [
+const ALL_TABS: { id: Tab; label: string; flag: string }[] = [
   { id: 'ALL',         label: 'All',              flag: '🌐' },
   { id: 'NSC',         label: 'NSC',              flag: '🇿🇦' },
   { id: 'ZIMSEC-OL',   label: 'ZIMSEC O-Level',   flag: '🇿🇼' },
@@ -17,10 +18,29 @@ const TABS: { id: Tab; label: string; flag: string }[] = [
   { id: 'CAM-AL',      label: 'A Level',          flag: '🎓' },
 ]
 
+function getDefaultTab(curricula?: string[]): Tab {
+  if (!curricula?.length) return 'ALL'
+  if (curricula.includes('ZIMSEC-OL')) return 'ZIMSEC-OL'
+  if (curricula.includes('CAM-IGCSE')) return 'CAM-IGCSE'
+  if (curricula.includes('NSC')) return 'NSC'
+  return 'ALL'
+}
+
 export function SubjectsPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+
+  const TABS = useMemo(() => {
+    const curricula = user?.curricula
+    if (!curricula?.length) return ALL_TABS
+    return ALL_TABS.filter(tab => {
+      if (tab.id === 'ALL') return true
+      return curricula.includes(tab.id)
+    })
+  }, [user?.curricula])
+
   const [query,       setQuery]       = useState('')
-  const [activeTab,   setActiveTab]   = useState<Tab>('ALL')
+  const [activeTab,   setActiveTab]   = useState<Tab>(() => getDefaultTab(user?.curricula))
 
   const pool = activeTab === 'ALL' ? SUBJECTS : (SUBJECTS_BY_CURRICULUM[activeTab as CurriculumCode] ?? [])
 

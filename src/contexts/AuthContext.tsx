@@ -6,8 +6,9 @@ import type { User, Session } from '@supabase/supabase-js'
 interface AuthContextValue {
   user: UserProfile | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error?: string }>
-  signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<{ error?: string }>
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error?: string }>
+  signUp: (email: string, password: string, fullName: string, role: UserRole, curricula: string[]) => Promise<{ error?: string }>
+  signInWithGoogle: () => Promise<{ error?: string }>
   signOut: () => void
   updateProfile: (updates: Partial<UserProfile>) => void
 }
@@ -28,14 +29,13 @@ function saveDemoUsers(u: Record<string, UserProfile & { password: string }>) {
 function seedDemoUsers() {
   const users = getDemoUsers()
   if (!users['admin@compass.edu']) {
-    users['admin@compass.edu'] = { id: 'admin-001', email: 'admin@compass.edu', full_name: 'Admin User', role: 'admin', created_at: new Date().toISOString(), password: 'admin123' }
-    users['student@compass.edu'] = { id: 'student-001', email: 'student@compass.edu', full_name: 'Demo Student', role: 'student', created_at: new Date().toISOString(), password: 'student123' }
+    users['admin@compass.edu'] = { id: 'admin-001', email: 'admin@compass.edu', full_name: 'Admin User', role: 'admin', created_at: new Date().toISOString(), password: 'admin123', curricula: ['ZIMSEC-OL', 'ZIMSEC-AL', 'CAM-IGCSE', 'CAM-AL'] }
+    users['student@compass.edu'] = { id: 'student-001', email: 'student@compass.edu', full_name: 'Demo Student', role: 'student', created_at: new Date().toISOString(), password: 'student123', curricula: ['ZIMSEC-OL', 'ZIMSEC-AL'] }
     saveDemoUsers(users)
   }
 }
 
 // ─── Build a UserProfile from a Supabase auth User ───────────────────────────
-// Works even if the profiles table doesn't exist yet.
 
 function profileFromAuthUser(authUser: User): UserProfile {
   return {
@@ -44,6 +44,7 @@ function profileFromAuthUser(authUser: User): UserProfile {
     full_name:  authUser.user_metadata?.full_name ?? authUser.email?.split('@')[0] ?? 'User',
     role:       (authUser.user_metadata?.role as UserRole) ?? 'student',
     created_at: authUser.created_at,
+    curricula:  authUser.user_metadata?.curricula ?? [],
   }
 }
 
@@ -55,7 +56,14 @@ async function resolveProfile(authUser: User): Promise<UserProfile> {
       .select('*')
       .eq('id', authUser.id)
       .single()
-    if (data) return data as UserProfile
+    if (data) {
+      // Merge curricula: prefer DB column, fall back to auth metadata
+      const curricula: string[] =
+        (data.curricula as string[] | null)?.length
+          ? (data.curricula as string[])
+          : (authUser.user_metadata?.curricula ?? [])
+      return { ...data, curricula } as UserProfile
+    }
   } catch { /* profiles table may not exist yet */ }
   return profileFromAuthUser(authUser)
 }
@@ -77,17 +85,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    // Handle "don't remember me" — if flag set and no active tab, sign out
+    const noPeristEmail = localStorage.getItem('compass_no_persist')
+    if (noPeristEmail && !sessionStorage.getItem('compass_tab')) {
+      supabase.auth.signOut().finally(() => {
+        localStorage.removeItem('compass_no_persist')
+      })
+    }
+    sessionStorage.setItem('compass_tab', '1')
+
     // Check for an existing session on mount — 6s timeout so a paused/slow
     // Supabase project never leaves the app stuck on the loading spinner.
     const timeout = new Promise<{ data: { session: null } }>(res =>
       setTimeout(() => res({ data: { session: null } }), 6000)
     )
     Promise.race([supabase.auth.getSession(), timeout]).then(async ({ data: { session } }) => {
-      if (session?.user) setUser(await resolveProfile(session.user))
+      if (session?.user) {
+        setUser(await resolveProfile(session.user))
+      } else {
+        // Capture OAuth error from URL before the router redirects away (e.g. failed Google sign-in)
+        const params = new URLSearchParams(window.location.search)
+        const oauthError = params.get('error_description') || params.get('error')
+        if (oauthError) {
+          sessionStorage.setItem('compass_oauth_error', decodeURIComponent(oauthError))
+        }
+      }
       setLoading(false)
     }).catch(() => setLoading(false))
 
-    // Keep in sync with Supabase auth events (token refresh, sign-out from another tab)
+    // Keep in sync with Supabase auth events (token refresh, sign-out from another tab, OAuth callback)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event: string, session: Session | null) => {
         if (session?.user) {
@@ -101,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []) // eslint-disable-line
 
   // ── Sign in ───────────────────────────────────────────────────────────────
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string, rememberMe = true) => {
     if (!SUPABASE_ENABLED) {
       const users = getDemoUsers()
       const record = users[email.toLowerCase()]
@@ -109,15 +135,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { password: _pw, ...profile } = record
       setUser(profile)
       localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(profile))
+      if (!rememberMe) {
+        window.addEventListener('pagehide', () => localStorage.removeItem(DEMO_SESSION_KEY), { once: true })
+      }
       return {}
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return { error: error.message }
 
-    // Set user immediately from auth data — no DB round-trip needed to unblock navigation
+    if (!rememberMe) {
+      // Clear Supabase session from localStorage when tab/browser closes
+      localStorage.setItem('compass_no_persist', email)
+      window.addEventListener('pagehide', () => {
+        for (const key of Object.keys(localStorage)) {
+          if (key.startsWith('sb-') && key.includes('-auth-token')) {
+            localStorage.removeItem(key)
+          }
+        }
+        localStorage.removeItem('compass_no_persist')
+      }, { once: true })
+    }
+
     const profile = await resolveProfile(data.user)
     setUser(profile)
+    return {}
+  }, [])
+
+  // ── Google OAuth ──────────────────────────────────────────────────────────
+  const signInWithGoogle = useCallback(async () => {
+    if (!SUPABASE_ENABLED) return { error: 'Google sign-in requires Supabase — running in demo mode.' }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    })
+    if (error) return { error: error.message }
     return {}
   }, [])
 
@@ -127,11 +179,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     fullName: string,
     role: UserRole,
+    curricula: string[],
   ) => {
     if (!SUPABASE_ENABLED) {
       const users = getDemoUsers()
       if (users[email.toLowerCase()]) return { error: 'An account with this email already exists' }
-      const profile: UserProfile = { id: `user-${Date.now()}`, email: email.toLowerCase(), full_name: fullName, role, created_at: new Date().toISOString() }
+      const profile: UserProfile = { id: `user-${Date.now()}`, email: email.toLowerCase(), full_name: fullName, role, created_at: new Date().toISOString(), curricula }
       users[email.toLowerCase()] = { ...profile, password }
       saveDemoUsers(users)
       setUser(profile)
@@ -142,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, role } },
+      options: { data: { full_name: fullName, role, curricula } },
     })
     if (signUpError) return { error: signUpError.message }
 
@@ -150,7 +203,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError) return { error: 'Account created! Please sign in.' }
 
-    // Set user immediately — resolveProfile falls back to auth metadata if DB trigger hasn't fired
+    // Upsert curricula into profiles table (if migration 004 has been run)
+    try {
+      await supabase.from('profiles').update({ curricula }).eq('id', data.user.id)
+    } catch { /* table might not have curricula column yet */ }
+
     const profile = await resolveProfile(data.user)
     setUser(profile)
     return {}
@@ -159,6 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ── Sign out ──────────────────────────────────────────────────────────────
   const signOut = useCallback(() => {
     setUser(null)
+    localStorage.removeItem('compass_no_persist')
     if (!SUPABASE_ENABLED) {
       localStorage.removeItem(DEMO_SESSION_KEY)
     } else {
@@ -181,7 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

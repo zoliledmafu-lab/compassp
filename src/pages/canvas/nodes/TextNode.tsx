@@ -59,16 +59,35 @@ export function TextNode({ id, data, selected }: Props) {
         >
           <GripVertical size={12} className="text-white/20" />
           {/* Color pips */}
-          <div className="flex items-center gap-1">
+          <div className="nodrag flex items-center gap-1">
             {COLORS.map(c => (
               <button
                 key={c}
-                onMouseDown={e => { e.stopPropagation(); setColor(c) }}
+                onClick={e => { e.stopPropagation(); setColor(c) }}
                 className="w-2.5 h-2.5 rounded-full border border-white/20 hover:scale-125 transition-transform"
                 style={{ background: c }}
               />
             ))}
           </div>
+          {/* Inline action buttons */}
+          {selected && !editing && (
+            <div className="nodrag flex items-center gap-0.5 ml-2">
+              <button
+                onClick={e => { e.stopPropagation(); onBranch(id) }}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] text-indigo-300 hover:text-white hover:bg-indigo-500/30 transition-all"
+                title="Branch conversation"
+              >
+                <GitBranch size={10} /> Branch
+              </button>
+              <button
+                onClick={e => { e.stopPropagation(); onDelete(id) }}
+                className="p-0.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                title="Delete node"
+              >
+                <Trash2 size={11} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -95,26 +114,6 @@ export function TextNode({ id, data, selected }: Props) {
           )}
         </div>
 
-        {/* Action bar */}
-        {selected && !editing && (
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-[#1a1a2e] border border-white/10 rounded-xl px-2 py-1.5 shadow-xl">
-            <button
-              onMouseDown={e => { e.stopPropagation(); onBranch(id) }}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-indigo-300 hover:text-white hover:bg-indigo-500/30 transition-all"
-              title="Branch conversation"
-            >
-              <GitBranch size={12} /> Branch
-            </button>
-            <div className="w-px h-4 bg-white/10" />
-            <button
-              onMouseDown={e => { e.stopPropagation(); onDelete(id) }}
-              className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all"
-              title="Delete node"
-            >
-              <Trash2 size={12} />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Source handle — branch edges leave from here */}

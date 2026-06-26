@@ -1,6 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Companion } from '../companion/Companion'
+import { OnboardingTour } from '../onboarding/OnboardingTour'
 import { useAuth } from '../../contexts/AuthContext'
 
 export function AppLayout() {
@@ -23,6 +24,7 @@ export function AppLayout() {
         <Outlet />
       </main>
       <Companion />
+      <OnboardingTour />
     </div>
   )
 }
