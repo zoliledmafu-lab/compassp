@@ -12,6 +12,18 @@
 -- ── Extensions ─────────────────────────────────────────────
 create extension if not exists "uuid-ossp";
 
+-- ── profiles ───────────────────────────────────────────────
+-- Created first so is_admin() can reference it
+create table if not exists public.profiles (
+  id          uuid primary key references auth.users(id) on delete cascade,
+  email       text not null,
+  full_name   text not null default '',
+  role        text not null default 'student'
+                check (role in ('student', 'admin')),
+  avatar_url  text,
+  created_at  timestamptz default now()
+);
+
 -- ── Helper: is current user an admin? ──────────────────────
 create or replace function public.is_admin()
 returns boolean
@@ -22,17 +34,6 @@ as $$
     where id = auth.uid() and role = 'admin'
   );
 $$;
-
--- ── profiles ───────────────────────────────────────────────
-create table if not exists public.profiles (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  email       text not null,
-  full_name   text not null default '',
-  role        text not null default 'student'
-                check (role in ('student', 'admin')),
-  avatar_url  text,
-  created_at  timestamptz default now()
-);
 
 alter table public.profiles enable row level security;
 
