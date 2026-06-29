@@ -20,7 +20,7 @@ const store = new Store<StoreSchema>({
     shortcut:    'CommandOrControl+Shift+Space',
     voiceGender: 'female',
     compassUrl:  'http://localhost:5173',
-    edgeFnUrl:   'https://rxpdespqcaiqrlzfnrtw.supabase.co/functions/v1/voice-companion',
+    edgeFnUrl:   'https://njetilhbprvvazalcxrs.supabase.co/functions/v1/voice-companion',
   },
 })
 

@@ -2,7 +2,7 @@
 
 ## 1 — Run SQL Migrations (Supabase SQL Editor)
 
-Open https://supabase.com/dashboard/project/rxpdespqcaiqrlzfnrtw/sql/new
+Open https://supabase.com/dashboard/project/njetilhbprvvazalcxrs/sql/new
 and run each file in order:
 
 | Order | File | What it creates |
@@ -22,13 +22,13 @@ Paste each file's contents and click **Run**.
 ```bash
 npm install -g supabase
 supabase login
-supabase link --project-ref rxpdespqcaiqrlzfnrtw
+supabase link --project-ref njetilhbprvvazalcxrs
 supabase functions deploy voice-companion
 ```
 
 ### Option B — Supabase Dashboard
 
-1. Go to https://supabase.com/dashboard/project/rxpdespqcaiqrlzfnrtw/functions
+1. Go to https://supabase.com/dashboard/project/njetilhbprvvazalcxrs/functions
 2. Click **New function** → name it `voice-companion`
 3. Paste the contents of `supabase/functions/voice-companion/index.ts`
 4. Click **Deploy**
@@ -37,7 +37,7 @@ supabase functions deploy voice-companion
 
 ## 3 — Set Edge Function Environment Variables
 
-Go to: https://supabase.com/dashboard/project/rxpdespqcaiqrlzfnrtw/functions/voice-companion/details
+Go to: https://supabase.com/dashboard/project/njetilhbprvvazalcxrs/functions/voice-companion/details
 
 Add these secrets:
 
@@ -45,7 +45,7 @@ Add these secrets:
 |----------|-------|-----------------|
 | `ANTHROPIC_API_KEY` | `sk-ant-...` | https://console.anthropic.com/settings/keys |
 | `ELEVENLABS_API_KEY` | `...` | https://elevenlabs.io/app/settings/api-keys (optional — enables real voice) |
-| `SUPABASE_URL` | `https://rxpdespqcaiqrlzfnrtw.supabase.co` | Already set automatically |
+| `SUPABASE_URL` | `https://njetilhbprvvazalcxrs.supabase.co` | Already set automatically |
 | `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGci...` | Supabase → Settings → API → service_role key |
 
 > **IMPORTANT:** The service role key gives full database access — never put it in frontend code or `.env` files.
@@ -55,7 +55,7 @@ Add these secrets:
 ## 4 — Update the React app `.env`
 
 ```
-VITE_SUPABASE_URL=https://rxpdespqcaiqrlzfnrtw.supabase.co
+VITE_SUPABASE_URL=https://njetilhbprvvazalcxrs.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 VITE_ANTHROPIC_API_KEY=sk-ant-...   # optional — enables real chat responses
 ```
@@ -86,19 +86,19 @@ Or one-click deploy to Vercel:
 1. Go to [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**
 2. Click **Create Credentials** → **OAuth 2.0 Client ID** → Application type: **Web application**
 3. Under **Authorised JavaScript origins**, add:
-   - `https://rxpdespqcaiqrlzfnrtw.supabase.co`
+   - `https://njetilhbprvvazalcxrs.supabase.co`
 4. Under **Authorised redirect URIs**, add:
-   - `https://rxpdespqcaiqrlzfnrtw.supabase.co/auth/v1/callback`
+   - `https://njetilhbprvvazalcxrs.supabase.co/auth/v1/callback`
 5. Click **Create** — copy the **Client ID** and **Client Secret**
 
 ### Step B — Supabase Dashboard
 
-6. Go to: https://supabase.com/dashboard/project/rxpdespqcaiqrlzfnrtw/auth/providers
+6. Go to: https://supabase.com/dashboard/project/njetilhbprvvazalcxrs/auth/providers
 7. Click **Google** → toggle **Enable** → paste **Client ID** and **Client Secret** → **Save**
 
 ### Step C — Allow Redirect URLs (critical — missed step)
 
-8. Go to: https://supabase.com/dashboard/project/rxpdespqcaiqrlzfnrtw/auth/url-configuration
+8. Go to: https://supabase.com/dashboard/project/njetilhbprvvazalcxrs/auth/url-configuration
 9. Under **Redirect URLs**, add:
    - `http://localhost:5173/**`  ← for local development
    - Your production URL when you deploy (e.g. `https://compass.vercel.app/**`)
