@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, User, Compass, GraduationCap, Shield, Eye, EyeOff, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Mail, Lock, User, Compass, GraduationCap, Shield, Eye, EyeOff, ChevronRight, ChevronLeft, Building2 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -50,6 +50,7 @@ export function SignupPage() {
 
   const [step,         setStep]         = useState<1 | 2>(1)
   const [fullName,     setFullName]     = useState('')
+  const [schoolName,   setSchoolName]   = useState('')
   const [email,        setEmail]        = useState('')
   const [password,     setPassword]     = useState('')
   const [role,         setRole]         = useState<UserRole>('student')
@@ -73,7 +74,7 @@ export function SignupPage() {
     setError('')
     setLoading(true)
     const option = CURRICULUM_OPTIONS.find(o => o.id === curriculum)!
-    const result = await signUp(email, password, fullName, role, [...option.codes])
+    const result = await signUp(email, password, fullName, role, [...option.codes], schoolName)
     setLoading(false)
     if (result.error) { setError(result.error); setStep(1) }
     else navigate('/dashboard')
@@ -153,6 +154,7 @@ export function SignupPage() {
                 </div>
 
                 <Input label="Full name" type="text" placeholder="Your full name" value={fullName} onChange={e => setFullName(e.target.value)} icon={<User size={16} />} required />
+                <Input label="School name" type="text" placeholder="e.g. Harare High School" value={schoolName} onChange={e => setSchoolName(e.target.value)} icon={<Building2 size={16} />} required />
                 <Input label="Email address" type="email" placeholder="you@school.edu" value={email} onChange={e => setEmail(e.target.value)} icon={<Mail size={16} />} required autoComplete="email" />
                 <Input
                   label="Password"

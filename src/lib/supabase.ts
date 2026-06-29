@@ -24,6 +24,7 @@ export interface UserProfile {
   full_name: string
   role: UserRole
   avatar_url?: string
+  school_name?: string
   created_at: string
   curricula?: string[]
 }

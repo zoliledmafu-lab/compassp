@@ -17,6 +17,9 @@ export function AppLayout() {
 
   if (!user) return <Navigate to="/login" replace />
 
+  // New Google OAuth users land here with no curricula — send them to onboarding
+  if (!user.curricula || user.curricula.length === 0) return <Navigate to="/onboarding" replace />
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />

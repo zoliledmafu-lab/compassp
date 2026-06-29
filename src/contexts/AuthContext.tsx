@@ -7,7 +7,7 @@ interface AuthContextValue {
   user: UserProfile | null
   loading: boolean
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error?: string }>
-  signUp: (email: string, password: string, fullName: string, role: UserRole, curricula: string[]) => Promise<{ error?: string }>
+  signUp: (email: string, password: string, fullName: string, role: UserRole, curricula: string[], schoolName?: string) => Promise<{ error?: string }>
   signInWithGoogle: () => Promise<{ error?: string }>
   signOut: () => void
   updateProfile: (updates: Partial<UserProfile>) => void
@@ -39,12 +39,13 @@ function seedDemoUsers() {
 
 function profileFromAuthUser(authUser: User): UserProfile {
   return {
-    id:         authUser.id,
-    email:      authUser.email ?? '',
-    full_name:  authUser.user_metadata?.full_name ?? authUser.email?.split('@')[0] ?? 'User',
-    role:       (authUser.user_metadata?.role as UserRole) ?? 'student',
-    created_at: authUser.created_at,
-    curricula:  authUser.user_metadata?.curricula ?? [],
+    id:          authUser.id,
+    email:       authUser.email ?? '',
+    full_name:   authUser.user_metadata?.full_name ?? authUser.email?.split('@')[0] ?? 'User',
+    role:        (authUser.user_metadata?.role as UserRole) ?? 'student',
+    school_name: authUser.user_metadata?.school_name ?? '',
+    created_at:  authUser.created_at,
+    curricula:   authUser.user_metadata?.curricula ?? [],
   }
 }
 
@@ -180,11 +181,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fullName: string,
     role: UserRole,
     curricula: string[],
+    schoolName = '',
   ) => {
     if (!SUPABASE_ENABLED) {
       const users = getDemoUsers()
       if (users[email.toLowerCase()]) return { error: 'An account with this email already exists' }
-      const profile: UserProfile = { id: `user-${Date.now()}`, email: email.toLowerCase(), full_name: fullName, role, created_at: new Date().toISOString(), curricula }
+      const profile: UserProfile = { id: `user-${Date.now()}`, email: email.toLowerCase(), full_name: fullName, role, school_name: schoolName, created_at: new Date().toISOString(), curricula }
       users[email.toLowerCase()] = { ...profile, password }
       saveDemoUsers(users)
       setUser(profile)
@@ -195,7 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, role, curricula } },
+      options: { data: { full_name: fullName, role, curricula, school_name: schoolName } },
     })
     if (signUpError) return { error: signUpError.message }
 
@@ -203,10 +205,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError) return { error: 'Account created! Please sign in.' }
 
-    // Upsert curricula into profiles table (if migration 004 has been run)
+    // Save all profile fields to the profiles table
     try {
-      await supabase.from('profiles').update({ curricula }).eq('id', data.user.id)
-    } catch { /* table might not have curricula column yet */ }
+      await supabase.from('profiles').update({ curricula, school_name: schoolName }).eq('id', data.user.id)
+    } catch { /* table might not exist yet */ }
 
     const profile = await resolveProfile(data.user)
     setUser(profile)
