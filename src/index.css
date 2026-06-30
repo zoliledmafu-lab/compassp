@@ -88,3 +88,38 @@
   0%   { transform: scaleY(0.4); }
   100% { transform: scaleY(1.4); }
 }
+
+/* ── Compass character animations ──────────────────────────── */
+@keyframes compassFloat {
+  0%, 100% { transform: rotate(45deg) translateY(0px); }
+  50%       { transform: rotate(45deg) translateY(-5px); }
+}
+@keyframes compassPulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(13,148,136,0.3), 0 4px 16px rgba(0,0,0,0.3); }
+  50%       { box-shadow: 0 0 36px rgba(99,102,241,0.7), 0 4px 16px rgba(0,0,0,0.3); }
+}
+@keyframes compassBounce {
+  0%, 100% { transform: rotate(45deg) translateY(0px); }
+  30%       { transform: rotate(45deg) translateY(-10px); }
+  60%       { transform: rotate(45deg) translateY(-5px); }
+}
+@keyframes compassCelebrate {
+  0%   { transform: rotate(45deg) scale(1); }
+  20%  { transform: rotate(65deg) scale(1.15); }
+  40%  { transform: rotate(25deg) scale(1.2); }
+  60%  { transform: rotate(55deg) scale(1.1); }
+  80%  { transform: rotate(40deg) scale(1.15); }
+  100% { transform: rotate(45deg) scale(1); }
+}
+
+.compass-anim-idle      { animation: compassFloat     2.8s ease-in-out infinite; }
+.compass-anim-think     { animation: compassPulse     1.4s ease-in-out infinite; }
+.compass-anim-speak     { animation: compassBounce    0.6s ease-in-out 3; }
+.compass-anim-celebrate { animation: compassCelebrate 0.9s ease-in-out 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-anim-idle,
+  .compass-anim-think,
+  .compass-anim-speak,
+  .compass-anim-celebrate { animation: none; }
+}

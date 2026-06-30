@@ -6,6 +6,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { LoginPage } from './pages/auth/LoginPage'
 import { SignupPage } from './pages/auth/SignupPage'
 import { OnboardingPage } from './pages/auth/OnboardingPage'
+import { LearnPage } from './pages/learn/LearnPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { ChatPage } from './pages/chat/ChatPage'
 import { CanvasPage } from './pages/canvas/CanvasPage'
@@ -25,6 +26,8 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/onboarding" element={<OnboardingPage />} />
+              <Route path="/learn/:topicId" element={<LearnPage />} />
+              <Route path="/learn" element={<LearnPage />} />
               <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/chat" element={<ChatPage />} />
