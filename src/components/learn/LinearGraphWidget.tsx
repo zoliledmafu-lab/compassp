@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { CircleWidgetState } from '../../lib/learningTypes'
+import type { LinearWidgetState } from '../../lib/learningTypes'
 
 interface Props {
   gridRange: number
   equation?: string
-  value: CircleWidgetState
-  onChange: (state: CircleWidgetState) => void
+  value: LinearWidgetState
+  onChange: (state: LinearWidgetState) => void
   onSizeChange?: (w: number, h: number) => void
 }
 
-export function CircleGraphWidget({ gridRange, equation, value, onChange, onSizeChange }: Props) {
+// Slope handle sits at x = gridRange * 0.45 (fixed x, drag moves y only → changes slope)
+// Intercept handle sits at x = 0 (drag moves y only → changes intercept)
+
+export function LinearGraphWidget({ gridRange, equation, value, onChange, onSizeChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 360, h: 360 })
-  const [drag, setDrag]   = useState<'center' | 'radius' | null>(null)
+  const [drag, setDrag] = useState<'intercept' | 'slope' | null>(null)
 
   useEffect(() => {
     const el = containerRef.current
@@ -27,41 +30,32 @@ export function CircleGraphWidget({ gridRange, equation, value, onChange, onSize
     return () => ro.disconnect()
   }, [onSizeChange])
 
-  const pad = 40
+  const pad = 44
   const toX = useCallback((gx: number) => size.w / 2 + (gx / gridRange) * (size.w / 2 - pad), [size, gridRange])
   const toY = useCallback((gy: number) => size.h / 2 - (gy / gridRange) * (size.h / 2 - pad), [size, gridRange])
-  const toR = useCallback((r: number) => (r / gridRange) * (size.w / 2 - pad), [size, gridRange])
-  const fromPx = useCallback((px: number, py: number) => {
-    const gx = ((px - size.w / 2) / (size.w / 2 - pad)) * gridRange
+  const fromPxY = useCallback((py: number) => {
     const gy = -((py - size.h / 2) / (size.h / 2 - pad)) * gridRange
-    return { gx: Math.round(gx * 2) / 2, gy: Math.round(gy * 2) / 2 }
+    return Math.round(gy * 4) / 4
   }, [size, gridRange])
 
-  const svgPoint = useCallback((e: React.MouseEvent | MouseEvent) => {
-    const svg = (e.currentTarget ?? e.target) as SVGSVGElement
-    const rect = svg.getBoundingClientRect()
-    return { px: e.clientX - rect.left, py: e.clientY - rect.top }
-  }, [])
+  const SLOPE_GX = gridRange * 0.45
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!drag) return
     const rect = containerRef.current?.querySelector('svg')?.getBoundingClientRect()
     if (!rect) return
-    const px = e.clientX - rect.left
     const py = e.clientY - rect.top
+    const gy = fromPxY(py)
 
-    if (drag === 'center') {
-      const { gx, gy } = fromPx(px, py)
-      onChange({ ...value, center: { x: gx, y: gy } })
+    if (drag === 'intercept') {
+      const clamped = Math.max(-gridRange * 0.85, Math.min(gridRange * 0.85, gy))
+      onChange({ ...value, intercept: clamped })
     } else {
-      const dx = px - toX(value.center.x)
-      const dy = py - toY(value.center.y)
-      const pixelR = Math.sqrt(dx * dx + dy * dy)
-      const gridR = (pixelR / (size.w / 2 - pad)) * gridRange
-      const r = Math.max(0.5, Math.round(gridR * 2) / 2)
-      onChange({ ...value, radius: r })
+      const newSlope = (gy - value.intercept) / SLOPE_GX
+      const clamped = Math.max(-gridRange, Math.min(gridRange, newSlope))
+      onChange({ ...value, slope: Math.round(clamped * 4) / 4 })
     }
-  }, [drag, value, onChange, fromPx, toX, toY, size, gridRange])
+  }, [drag, value, onChange, fromPxY, SLOPE_GX, gridRange])
 
   useEffect(() => {
     if (!drag) return
@@ -72,23 +66,32 @@ export function CircleGraphWidget({ gridRange, equation, value, onChange, onSize
   }, [drag, handleMouseMove])
 
   // Grid lines
-  const step = gridRange <= 6 ? 1 : gridRange <= 10 ? 2 : 2
+  const step = gridRange <= 6 ? 1 : 2
   const gridLines: number[] = []
   for (let v = -gridRange; v <= gridRange; v += step) gridLines.push(v)
 
-  const cx = toX(value.center.x)
-  const cy = toY(value.center.y)
-  const cr = toR(value.radius)
-  // Radius handle at east side of circle
-  const rhx = toX(value.center.x + value.radius)
-  const rhy = toY(value.center.y)
+  // Compute line endpoints (extends to grid boundary)
+  const x1g = -gridRange, y1g = value.slope * x1g + value.intercept
+  const x2g = gridRange,  y2g = value.slope * x2g + value.intercept
+
+  // Intercept handle position (at x=0)
+  const ihX = toX(0)
+  const ihY = toY(value.intercept)
+
+  // Slope handle position (at x=SLOPE_GX)
+  const shX = toX(SLOPE_GX)
+  const shY = toY(value.slope * SLOPE_GX + value.intercept)
+
+  const slopeStr = value.slope === 0 ? '0'
+    : value.slope === Math.round(value.slope)
+      ? String(value.slope)
+      : value.slope.toFixed(2)
 
   return (
     <div ref={containerRef} className="w-full h-full flex flex-col items-center justify-center" style={{ background: 'transparent', borderRadius: 16, overflow: 'hidden' }}>
       <svg
         width={size.w} height={size.h}
         style={{ cursor: drag ? 'grabbing' : 'default', userSelect: 'none' }}
-        onMouseDown={e => { void svgPoint(e) /* keep ts happy */ }}
       >
         {/* Grid */}
         {gridLines.map(v => (
@@ -103,55 +106,56 @@ export function CircleGraphWidget({ gridRange, equation, value, onChange, onSize
             )}
           </g>
         ))}
+
         {/* Axis arrows */}
         <polygon points={`${toX(gridRange) + 4},${toY(0)} ${toX(gridRange)},${toY(0) - 5} ${toX(gridRange)},${toY(0) + 5}`} fill="rgba(255,255,255,0.3)" />
         <polygon points={`${toX(0)},${toY(gridRange) - 4} ${toX(0) - 5},${toY(gridRange)} ${toX(0) + 5},${toY(gridRange)}`} fill="rgba(255,255,255,0.3)" />
         <text x={toX(gridRange) + 10} y={toY(0) + 4} fontSize={11} fill="rgba(255,255,255,0.45)" fontStyle="italic">x</text>
         <text x={toX(0) + 6} y={toY(gridRange) - 6} fontSize={11} fill="rgba(255,255,255,0.45)" fontStyle="italic">y</text>
 
-        {/* Student's circle */}
-        {value.radius > 0 && (
-          <circle cx={cx} cy={cy} r={cr} stroke="#6366f1" strokeWidth={2.5} fill="rgba(99,102,241,0.08)" />
-        )}
+        {/* The line — clipped to SVG bounds */}
+        <clipPath id="grid-clip">
+          <rect x={pad / 2} y={pad / 2} width={size.w - pad} height={size.h - pad} />
+        </clipPath>
+        <line
+          x1={toX(x1g)} y1={toY(y1g)} x2={toX(x2g)} y2={toY(y2g)}
+          stroke="#6366f1" strokeWidth={2.5} strokeLinecap="round"
+          clipPath="url(#grid-clip)"
+        />
 
-        {/* Radius line */}
-        {value.radius > 0 && (
-          <line x1={cx} y1={cy} x2={rhx} y2={rhy} stroke="#6366f1" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.6} />
-        )}
+        {/* Dashed slope guide from intercept to slope handle */}
+        <line x1={ihX} y1={ihY} x2={shX} y2={shY} stroke="#6366f1" strokeWidth={1} strokeDasharray="4 3" opacity={0.5} />
 
-        {/* Radius handle */}
+        {/* Slope handle */}
         <circle
-          cx={rhx} cy={rhy} r={8}
+          cx={shX} cy={shY} r={9}
           fill="#6366f1" stroke="white" strokeWidth={2}
           style={{ cursor: 'grab' }}
-          onMouseDown={e => { e.stopPropagation(); setDrag('radius') }}
+          onMouseDown={e => { e.stopPropagation(); setDrag('slope') }}
         />
+        <text x={shX} y={shY + 4} textAnchor="middle" fontSize={8} fill="white" fontWeight="700">m</text>
 
-        {/* Centre dot */}
+        {/* Intercept handle */}
         <circle
-          cx={cx} cy={cy} r={9}
-          fill="#0d9488" stroke="white" strokeWidth={2.5}
+          cx={ihX} cy={ihY} r={9}
+          fill="#0d9488" stroke="white" strokeWidth={2}
           style={{ cursor: 'grab' }}
-          onMouseDown={e => { e.stopPropagation(); setDrag('center') }}
+          onMouseDown={e => { e.stopPropagation(); setDrag('intercept') }}
         />
-        {/* Centre crosshair */}
-        <line x1={cx - 5} y1={cy} x2={cx + 5} y2={cy} stroke="white" strokeWidth={1.5} />
-        <line x1={cx} y1={cy - 5} x2={cx} y2={cy + 5} stroke="white" strokeWidth={1.5} />
+        <line x1={ihX - 5} y1={ihY} x2={ihX + 5} y2={ihY} stroke="white" strokeWidth={1.5} />
+        <line x1={ihX} y1={ihY - 5} x2={ihX} y2={ihY + 5} stroke="white" strokeWidth={1.5} />
 
-        {/* Coord labels */}
-        <text x={cx + 10} y={cy - 10} fontSize={10} fill="#5eead4" fontWeight="600">
-          ({value.center.x}, {value.center.y})
+        {/* Labels */}
+        <text x={ihX + 14} y={ihY - 8} fontSize={10} fill="#5eead4" fontWeight="600">
+          c = {value.intercept}
         </text>
-        {value.radius > 0 && (
-          <text x={(cx + rhx) / 2} y={cy - 8} fontSize={10} fill="#6366f1" fontWeight="600" textAnchor="middle">
-            r = {value.radius}
-          </text>
-        )}
+        <text x={shX + 14} y={shY + 4} fontSize={10} fill="#6366f1" fontWeight="600">
+          m = {slopeStr}
+        </text>
       </svg>
 
-      {/* Equation label */}
       {equation && (
-        <div className="mt-2 mb-3 text-sm font-medium" style={{ fontFamily: 'Georgia, serif', letterSpacing: 0.3, color: 'rgba(255,255,255,0.55)' }}>
+        <div className="mt-1 mb-3 text-sm font-medium" style={{ fontFamily: 'Georgia, serif', color: 'rgba(255,255,255,0.55)' }}>
           {equation}
         </div>
       )}

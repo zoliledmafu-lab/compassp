@@ -17,6 +17,7 @@ export function buildSystemPrompt(
   subject: Subject,
   memory: StudentMemory | null,
   hintCount: number,
+  languageInstruction?: string,
 ): string {
   const memoryContext = memory
     ? `
@@ -73,7 +74,8 @@ RESPONSE STYLE:
 
 ${memoryContext}
 
-Your north star: when this student walks out of a tough exam, you want them to feel like they actually *got it* — not like someone did it for them. Make learning feel like a good conversation.`
+Your north star: when this student walks out of a tough exam, you want them to feel like they actually *got it* — not like someone did it for them. Make learning feel like a good conversation.
+${languageInstruction ? `\n${languageInstruction}` : ''}`
 }
 
 function getCurriculumGuidance(code: CurriculumCode, subject: string): string {

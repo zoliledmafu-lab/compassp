@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MessageSquare, Layers, BookOpen, Flame, Brain, Target, Plus, X, Check, TrendingUp } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useMemory } from '../../contexts/MemoryContext'
+import { useLanguage } from '../../contexts/LanguageContext'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import {
@@ -41,13 +42,13 @@ function AdminDashboard() {
   )
 }
 
-// ── Greeting ─────────────────────────────────────────────────────────────────
+// ── Greeting key ──────────────────────────────────────────────────────────────
 
-function greeting() {
+function greetingKey(): 'dash_greeting_morning' | 'dash_greeting_afternoon' | 'dash_greeting_evening' {
   const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
+  if (h < 12) return 'dash_greeting_morning'
+  if (h < 17) return 'dash_greeting_afternoon'
+  return 'dash_greeting_evening'
 }
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
@@ -187,6 +188,7 @@ function AddSubjectsPanel({ available, pinned, onToggle, onClose }: AddSubjectsP
 export function DashboardPage() {
   const { user }   = useAuth()
   const { getMemory } = useMemory()
+  const { t } = useLanguage()
   const navigate   = useNavigate()
 
   const [pinnedIds,    setPinnedState]   = useState<string[]>([])
@@ -224,12 +226,12 @@ export function DashboardPage() {
       {/* ── Welcome ────────────────────────────────────────────────── */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white tracking-tight">
-          {greeting()}, {user.full_name?.split(' ')[0]}
+          {t(greetingKey())}, {user.full_name?.split(' ')[0]}
         </h1>
         <p className="text-slate-400 mt-1 text-sm">
           {pinnedSubjects.length === 0
-            ? 'Add your subjects to get started.'
-            : 'Ready to make progress today?'}
+            ? t('dash_add_subjects_prompt')
+            : t('dash_ready')}
         </p>
       </div>
 
@@ -238,28 +240,28 @@ export function DashboardPage() {
         <StatCard
           iconClass="icon-3d-orange"
           icon={<Flame size={18} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}
-          label="Study streak"
+          label={t('dash_stat_streak')}
           value={streak === 0 ? '0 days' : `${streak} day`}
           valueColor="text-orange-400"
         />
         <StatCard
           iconClass="icon-3d-purple"
           icon={<Brain size={18} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}
-          label="Subjects added"
+          label={t('dash_stat_subjects')}
           value={pinnedSubjects.length}
           valueColor="text-purple-400"
         />
         <StatCard
           iconClass="icon-3d-blue"
           icon={<MessageSquare size={18} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}
-          label="Total sessions"
+          label={t('dash_stat_sessions')}
           value={totalSessions}
           valueColor="text-blue-400"
         />
         <StatCard
           iconClass="icon-3d-green"
           icon={<Target size={18} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}
-          label="Concepts explored"
+          label={t('dash_stat_concepts')}
           value={totalConcepts}
           valueColor="text-green-400"
         />
@@ -270,25 +272,25 @@ export function DashboardPage() {
         <ActionCard
           iconClass="icon-3d-indigo"
           icon={<MessageSquare size={20} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}
-          title="Start Studying"
-          desc="Ask questions, work through problems with AI guidance"
-          cta="Open Chat"
+          title={t('dash_action_start_title')}
+          desc={t('dash_action_start_desc')}
+          cta={t('dash_action_start_cta')}
           onClick={() => navigate('/chat')}
         />
         <ActionCard
           iconClass="icon-3d-purple"
           icon={<Layers size={20} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}
-          title="Study Canvas"
-          desc="Build mind maps, organise your revision notes"
-          cta="Open Canvas"
+          title={t('dash_action_canvas_title')}
+          desc={t('dash_action_canvas_desc')}
+          cta={t('dash_action_canvas_cta')}
           onClick={() => navigate('/canvas')}
         />
         <ActionCard
           iconClass="icon-3d-teal"
           icon={<BookOpen size={20} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}
-          title="Browse Subjects"
-          desc="Explore your full curriculum — all subjects in one place"
-          cta="View Subjects"
+          title={t('dash_action_subjects_title')}
+          desc={t('dash_action_subjects_desc')}
+          cta={t('dash_action_subjects_cta')}
           onClick={() => navigate('/subjects')}
         />
       </div>
@@ -297,7 +299,7 @@ export function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-white flex items-center gap-2">
-            <TrendingUp size={16} className="text-indigo-400" /> Your Subjects
+            <TrendingUp size={16} className="text-indigo-400" /> {t('dash_your_subjects')}
           </h2>
           <button
             onClick={() => setShowPicker(v => !v)}
@@ -307,7 +309,7 @@ export function DashboardPage() {
                 : 'border-white/10 text-slate-400 hover:text-white hover:border-white/20'
             }`}
           >
-            <Plus size={12} /> Add subjects
+            <Plus size={12} /> {t('dash_add_subjects')}
           </button>
         </div>
 
@@ -331,11 +333,11 @@ export function DashboardPage() {
               <BookOpen size={22} className="text-white" />
             </div>
             <div>
-              <p className="font-semibold text-white text-sm">No subjects yet</p>
-              <p className="text-slate-500 text-xs mt-1">Add the subjects you're studying to track your progress here.</p>
+              <p className="font-semibold text-white text-sm">{t('dash_no_subjects')}</p>
+              <p className="text-slate-500 text-xs mt-1">{t('dash_no_subjects_sub')}</p>
             </div>
             <Button size="sm" onClick={() => setShowPicker(true)}>
-              <Plus size={14} /> Add subjects
+              <Plus size={14} /> {t('dash_add_subjects')}
             </Button>
           </Card>
         ) : (

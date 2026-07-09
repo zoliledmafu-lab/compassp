@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { RulesProvider } from './contexts/RulesContext'
 import { MemoryProvider } from './contexts/MemoryContext'
+import { LanguageProvider } from './contexts/LanguageContext'
 import { AppLayout } from './components/layout/AppLayout'
 import { LoginPage } from './pages/auth/LoginPage'
 import { SignupPage } from './pages/auth/SignupPage'
@@ -20,6 +21,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <LanguageProvider>
         <RulesProvider>
           <MemoryProvider>
             <Routes>
@@ -42,6 +44,7 @@ export default function App() {
             </Routes>
           </MemoryProvider>
         </RulesProvider>
+        </LanguageProvider>
       </AuthProvider>
     </BrowserRouter>
   )

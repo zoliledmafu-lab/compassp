@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext'
 import { useRules } from '../../contexts/RulesContext'
 import { useMemory } from '../../contexts/MemoryContext'
+import { useLanguage } from '../../contexts/LanguageContext'
 import { supabase, SUPABASE_ENABLED } from '../../lib/supabase'
 import { buildSystemPrompt, detectDirectAnswerAttempt } from '../../lib/ruleEngine'
 import { streamCompletion, extractSessionInsights } from '../../lib/claudeApi'
@@ -96,6 +97,7 @@ export function ChatPage() {
   const { user } = useAuth()
   const { rules } = useRules()
   const { getMemory, updateMemory } = useMemory()
+  const { aiInstruction } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Determine subjects visible to this user
@@ -231,7 +233,7 @@ export function ChatPage() {
     currentStreamRef.current = ''
 
     const memory = getMemory(user.id, subjectId)
-    const systemPrompt = buildSystemPrompt(rules, subject, memory, hintCount)
+    const systemPrompt = buildSystemPrompt(rules, subject, memory, hintCount, aiInstruction)
 
     await streamCompletion(
       systemPrompt,

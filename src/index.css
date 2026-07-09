@@ -8,12 +8,13 @@
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    background-color: #0f0f1a;
-    color: #e2e8f0;
+    font-feature-settings: 'cv11', 'ss01';
+    background-color: #07091a;
+    color: rgba(255,255,255,0.88);
     min-height: 100vh;
   }
 
