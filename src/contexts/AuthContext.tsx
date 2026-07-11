@@ -29,8 +29,10 @@ function saveDemoUsers(u: Record<string, UserProfile & { password: string }>) {
 function seedDemoUsers() {
   const users = getDemoUsers()
   if (!users['admin@compass.edu']) {
-    users['admin@compass.edu'] = { id: 'admin-001', email: 'admin@compass.edu', full_name: 'Admin User', role: 'admin', created_at: new Date().toISOString(), password: 'admin123', curricula: ['ZIMSEC-OL', 'ZIMSEC-AL', 'CAM-IGCSE', 'CAM-AL'] }
-    users['student@compass.edu'] = { id: 'student-001', email: 'student@compass.edu', full_name: 'Demo Student', role: 'student', created_at: new Date().toISOString(), password: 'student123', curricula: ['ZIMSEC-OL', 'ZIMSEC-AL'] }
+    const adminPassword = import.meta.env.VITE_DEMO_ADMIN_PASSWORD || 'admin123'
+    const studentPassword = import.meta.env.VITE_DEMO_STUDENT_PASSWORD || 'student123'
+    users['admin@compass.edu'] = { id: 'admin-001', email: 'admin@compass.edu', full_name: 'Admin User', role: 'admin', created_at: new Date().toISOString(), password: adminPassword, curricula: ['ZIMSEC-OL', 'ZIMSEC-AL', 'CAM-IGCSE', 'CAM-AL'] }
+    users['student@compass.edu'] = { id: 'student-001', email: 'student@compass.edu', full_name: 'Demo Student', role: 'student', created_at: new Date().toISOString(), password: studentPassword, curricula: ['ZIMSEC-OL', 'ZIMSEC-AL'] }
     saveDemoUsers(users)
   }
 }
