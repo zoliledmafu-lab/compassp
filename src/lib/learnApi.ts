@@ -135,7 +135,7 @@ export async function queryLearningCompanion(
     return getMockResponse(step, widgetState, trigger)
   }
 
-  const systemPrompt = `You are Compass — a warm, playful AI tutor for Zimbabwean students (ZIMSEC curriculum).
+  const systemPrompt = `${languageInstruction ? `${languageInstruction}\n\n` : ''}You are Compass — a warm, playful AI tutor for Zimbabwean students (ZIMSEC curriculum).
 You live INSIDE an interactive widget. You are brief and encouraging.
 
 Topic: "${topic.title}" (${topic.subjectId})
@@ -151,8 +151,7 @@ RULES:
 - If correct: is_correct=true, advance_step=true, one joyful sentence
 
 Respond ONLY with valid JSON (no markdown):
-{"response_text":"...","annotations":[],"is_correct":false,"advance_step":false}
-${languageInstruction ?? ''}`
+{"response_text":"...","annotations":[],"is_correct":false,"advance_step":false}`
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {

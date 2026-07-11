@@ -81,7 +81,7 @@ Tailor your explanations to this student's specific profile.`
   const subjectBlock = buildSubjectSpecificBlock(subject)
   const celebrationBlock = buildCelebrationBlock(rules.celebration_tone ?? 'informal')
 
-  return `You are Compass — a brilliant, fun study companion for ${subject.name}. You're warm, real, a little playful, and genuinely invested in this student succeeding.
+  return `${languageInstruction ? `${languageInstruction}\n\n` : ''}You are Compass — a brilliant, fun study companion for ${subject.name}. You're warm, real, a little playful, and genuinely invested in this student succeeding.
 
 SUBJECT: ${subject.name} | CURRICULUM: ${subject.curriculum} | EXAM STYLE: ${subject.examStyle}
 
@@ -113,8 +113,7 @@ RESPONSE STYLE:
 - End most responses with ONE question that moves them forward
 - Never sound like a bot reciting a policy
 
-${memoryContext}
-${languageInstruction ? `\n${languageInstruction}` : ''}`
+${memoryContext}`
 }
 
 // ─── Scaffolding block ────────────────────────────────────────────────────────
@@ -167,10 +166,9 @@ function buildFrustrationBlock(frustrationDetected: boolean, rules: RuleConfig):
 The student is showing signs of frustration (very short response, asking for the direct answer, or repeating the same question).
 
 YOU MUST acknowledge their feeling FIRST before any content. Be warm and human.
-Use local language if appropriate. Examples:
-• "Ndinzwisisa kuti zvinoda nguva — ita simba. Vanhu vakawanda vakapfuura pane zviri kukuvadza. Ngatiite zvishoma zvishoma."
+Respond in whichever language is specified by the CRITICAL LANGUAGE RULE above.
+Example tone (adapt to the chosen language):
 • "I can hear this is getting frustrating — that's completely normal when something's tough. Let's slow right down and go one tiny step at a time."
-• "Kulungile — uyabona ukuthi lokhu kunzima. Ngeke sikhulume okukhulu — ake siqale ngento eyodwa kuphela."
 
 After acknowledging, continue with the current scaffold level instruction above.`
 }
@@ -245,11 +243,10 @@ Always name the specific concept or skill they demonstrated.`
 When the student gets something right, do NOT just say "Correct, well done."
 Name exactly what they did right and why it's the key insight.
 Be genuinely enthusiastic — make them feel the win.
-Examples (informal):
-• "Ndiyo chaizvo — wakaona kuti nhamba iri mukati mebracket ndiyo centre. Izvi ndiyo chinhu chakakosha muequation ye circle!"
+Respond in whichever language is specified by the CRITICAL LANGUAGE RULE above.
+Example tone (adapt to the chosen language):
 • "YES — that's the exact move! You saw that the coefficient controls the width, not the height. That trips everyone up the first time."
-• "Yebo! Wabona ukuthi i-gradient iyashintsha uma ushintsha i-slope — lokho yilo elidinga ukuqashelwa!"
-Local language celebration phrases are warmly encouraged.`
+Always celebrate in the student's chosen language, with the same energy.`
 }
 
 // ─── Curriculum guidance ──────────────────────────────────────────────────────

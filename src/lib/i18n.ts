@@ -7,9 +7,9 @@ export const LANGUAGE_NAMES: Record<Language, string> = {
 }
 
 export const LANGUAGE_AI_INSTRUCTION: Record<Language, string> = {
-  en: '',
-  sn: 'LANGUAGE: You must respond entirely in chiShona (Shona). Write your full response in Shona. Mathematical and scientific terms without a Shona equivalent (like "gradient", "radius", "pH", "atom") may remain in English, but all explanations, encouragement and questions must be in Shona.',
-  nd: 'LANGUAGE: You must respond entirely in isiNdebele (Ndebele). Write your full response in isiNdebele. Mathematical and scientific terms without an Ndebele equivalent (like "gradient", "radius", "pH", "atom") may remain in English, but all explanations, encouragement and questions must be in isiNdebele.',
+  en: 'CRITICAL LANGUAGE RULE: Respond ONLY in English. Do NOT use any Shona, Ndebele, or any other language — not even a single word or phrase from another language. Every word of your entire response must be in English. This overrides all other instructions.',
+  sn: 'CRITICAL LANGUAGE RULE: Respond ONLY in chiShona. Do NOT write any English words, sentences, or phrases. Every single word of your response must be in chiShona. Do not code-switch. Do not mix languages. For mathematical or scientific concepts that lack a direct Shona word, describe the concept in Shona rather than switching to English. This overrides all other instructions.',
+  nd: 'CRITICAL LANGUAGE RULE: Respond ONLY in isiNdebele. Do NOT write any English words, sentences, or phrases. Every single word of your response must be in isiNdebele. Do not code-switch. Do not mix languages. For mathematical or scientific concepts that lack a direct Ndebele word, describe the concept in isiNdebele rather than switching to English. This overrides all other instructions.',
 }
 
 export interface Translations {
