@@ -33,3 +33,5 @@ compass-electron/dist
 # Supabase local
 .supabase/
 supabase/.temp/
+
+.vercel

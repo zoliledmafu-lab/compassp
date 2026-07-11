@@ -57,9 +57,17 @@ export function AngleWidget({ gridRange, equation, value, onChange, onSizeChange
   useEffect(() => {
     if (!dragging) return
     const up = () => setDragging(false)
+    const onTouchMove = (e: TouchEvent) => { e.preventDefault(); handleMouseMove(e.touches[0] as unknown as MouseEvent) }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', up)
-    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', up) }
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', up)
+    }
   }, [dragging, handleMouseMove])
 
   // Protractor arc
@@ -142,10 +150,11 @@ export function AngleWidget({ gridRange, equation, value, onChange, onSizeChange
 
         {/* Draggable tip */}
         <circle
-          cx={armX(value.angleDeg)} cy={armY(value.angleDeg)} r={10}
+          cx={armX(value.angleDeg)} cy={armY(value.angleDeg)} r={16}
           fill="#0d9488" stroke="white" strokeWidth={2.5}
           style={{ cursor: 'grab' }}
           onMouseDown={e => { e.stopPropagation(); setDragging(true) }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDragging(true) }}
         />
 
         {/* Degree readout */}

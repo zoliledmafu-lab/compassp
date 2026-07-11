@@ -61,9 +61,17 @@ export function BarChartWidget({
   useEffect(() => {
     if (dragIdx === null) return
     const up = () => setDragIdx(null)
+    const onTouchMove = (e: TouchEvent) => { e.preventDefault(); handleMouseMove(e.touches[0] as unknown as MouseEvent) }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', up)
-    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', up) }
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', up)
+    }
   }, [dragIdx, handleMouseMove])
 
   // Y-axis ticks
@@ -160,10 +168,11 @@ export function BarChartWidget({
 
               {/* Draggable handle at bar top */}
               <circle
-                cx={bx + barW / 2} cy={handleY} r={7}
+                cx={bx + barW / 2} cy={handleY} r={12}
                 fill={barColor} stroke="white" strokeWidth={2}
                 style={{ cursor: 'ns-resize' }}
                 onMouseDown={e => { e.stopPropagation(); setDragIdx(i) }}
+                onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDragIdx(i) }}
               />
             </g>
           )

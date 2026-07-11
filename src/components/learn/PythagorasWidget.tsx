@@ -61,9 +61,17 @@ export function PythagorasWidget({ gridRange, equation, value, onChange, onSizeC
   useEffect(() => {
     if (!drag) return
     const up = () => setDrag(null)
+    const onTouchMove = (e: TouchEvent) => { e.preventDefault(); handleMouseMove(e.touches[0] as unknown as MouseEvent) }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', up)
-    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', up) }
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', up)
+    }
   }, [drag, handleMouseMove])
 
   // Triangle vertices in SVG coords
@@ -137,19 +145,21 @@ export function PythagorasWidget({ gridRange, equation, value, onChange, onSizeC
 
         {/* Base handle (a) */}
         <circle
-          cx={A.x} cy={A.y} r={10}
+          cx={A.x} cy={A.y} r={14}
           fill="#6366f1" stroke="white" strokeWidth={2.5}
           style={{ cursor: 'ew-resize' }}
           onMouseDown={e => { e.stopPropagation(); setDrag('a') }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDrag('a') }}
         />
         <line x1={A.x - 5} y1={A.y} x2={A.x + 5} y2={A.y} stroke="white" strokeWidth={1.5} />
 
         {/* Height handle (b) */}
         <circle
-          cx={B.x} cy={B.y} r={10}
+          cx={B.x} cy={B.y} r={14}
           fill="#0d9488" stroke="white" strokeWidth={2.5}
           style={{ cursor: 'ns-resize' }}
           onMouseDown={e => { e.stopPropagation(); setDrag('b') }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDrag('b') }}
         />
         <line x1={B.x} y1={B.y - 5} x2={B.x} y2={B.y + 5} stroke="white" strokeWidth={1.5} />
       </svg>

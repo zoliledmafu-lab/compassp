@@ -18,12 +18,12 @@ import { CURRICULUM_META } from '../../lib/subjects'
 function AdminDashboard() {
   const navigate = useNavigate()
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Admin Console</h1>
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Admin Console</h1>
         <p className="text-slate-400 mt-1">Manage Compass for your institution</p>
       </div>
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
         {[
           { to: '/admin/rules',     icon: '⚙️', label: 'Rule Engine',   desc: 'Configure AI behaviour' },
           { to: '/admin/students',  icon: '👥', label: 'Students',       desc: 'Manage student roster' },
@@ -221,11 +221,11 @@ export function DashboardPage() {
   const streak = totalSessions > 0 ? 1 : 0
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
 
       {/* ── Welcome ────────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
           {t(greetingKey())}, {user.full_name?.split(' ')[0]}
         </h1>
         <p className="text-slate-400 mt-1 text-sm">
@@ -236,7 +236,7 @@ export function DashboardPage() {
       </div>
 
       {/* ── Stats ──────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 sm:mb-8">
         <StatCard
           iconClass="icon-3d-orange"
           icon={<Flame size={18} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}
@@ -268,7 +268,7 @@ export function DashboardPage() {
       </div>
 
       {/* ── Quick actions ───────────────────────────────────────────── */}
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 sm:mb-8">
         <ActionCard
           iconClass="icon-3d-indigo"
           icon={<MessageSquare size={20} className="text-white" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />}

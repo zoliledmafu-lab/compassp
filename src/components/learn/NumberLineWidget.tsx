@@ -64,9 +64,17 @@ export function NumberLineWidget({
   useEffect(() => {
     if (!dragging) return
     const up = () => setDragging(false)
+    const onTouchMove = (e: TouchEvent) => { e.preventDefault(); handleMouseMove(e.touches[0] as unknown as MouseEvent) }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', up)
-    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', up) }
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', up)
+    }
   }, [dragging, handleMouseMove])
 
   const markerX = toSvgX(value.value)
@@ -136,9 +144,10 @@ export function NumberLineWidget({
         {/* Draggable marker */}
         <g
           onMouseDown={e => { e.stopPropagation(); setDragging(true) }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDragging(true) }}
           style={{ cursor: 'grab' }}
         >
-          <circle cx={markerX} cy={lineY} r={16} fill={markerColor} stroke="white" strokeWidth={2.5} />
+          <circle cx={markerX} cy={lineY} r={20} fill={markerColor} stroke="white" strokeWidth={2.5} />
           <text x={markerX} y={lineY + 5} textAnchor="middle" fontSize={11} fill="white" fontWeight="700">
             {value.value}
           </text>

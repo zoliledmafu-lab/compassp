@@ -52,11 +52,11 @@ export function SubjectsPage() {
   const meta = activeTab !== 'ALL' ? CURRICULUM_META[activeTab as CurriculumCode] : null
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-1">Subjects</h1>
-        <p className="text-slate-400">Choose your curriculum and subject — Compass will guide you through it.</p>
+      <div className="mb-5 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Subjects</h1>
+        <p className="text-slate-400 text-sm sm:text-base">Choose your curriculum and subject — Compass will guide you through it.</p>
       </div>
 
       {/* Curriculum tabs */}
@@ -101,7 +101,7 @@ export function SubjectsPage() {
       )}
 
       {/* Search */}
-      <div className="mb-6 max-w-sm">
+      <div className="mb-5 sm:mb-6 max-w-full sm:max-w-sm">
         <Input
           placeholder={`Search ${activeTab === 'ALL' ? 'all subjects' : meta?.label ?? ''} …`}
           value={query}
@@ -116,7 +116,7 @@ export function SubjectsPage() {
           No subjects match "{query}"
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map(subject => {
             const cMeta = CURRICULUM_META[subject.curriculumCode]
             return (

@@ -62,9 +62,17 @@ export function QuadraticGraphWidget({ gridRange, equation, value, onChange, onS
   useEffect(() => {
     if (!drag) return
     const up = () => setDrag(null)
+    const onTouchMove = (e: TouchEvent) => { e.preventDefault(); handleMouseMove(e.touches[0] as unknown as MouseEvent) }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', up)
-    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', up) }
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', up)
+    }
   }, [drag, handleMouseMove])
 
   // Grid
@@ -135,19 +143,21 @@ export function QuadraticGraphWidget({ gridRange, equation, value, onChange, onS
 
         {/* Width handle */}
         <circle
-          cx={wx} cy={wy} r={8}
+          cx={wx} cy={wy} r={12}
           fill="#f59e0b" stroke="white" strokeWidth={2}
           style={{ cursor: 'grab' }}
           onMouseDown={e => { e.stopPropagation(); setDrag('width') }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDrag('width') }}
         />
         <text x={wx} y={wy + 4} textAnchor="middle" fontSize={8} fill="white" fontWeight="700">a</text>
 
         {/* Vertex handle */}
         <circle
-          cx={vx} cy={vy} r={9}
+          cx={vx} cy={vy} r={13}
           fill="#0d9488" stroke="white" strokeWidth={2.5}
           style={{ cursor: 'grab' }}
           onMouseDown={e => { e.stopPropagation(); setDrag('vertex') }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDrag('vertex') }}
         />
         <line x1={vx - 5} y1={vy} x2={vx + 5} y2={vy} stroke="white" strokeWidth={1.5} />
         <line x1={vx} y1={vy - 5} x2={vx} y2={vy + 5} stroke="white" strokeWidth={1.5} />

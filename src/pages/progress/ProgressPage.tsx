@@ -27,10 +27,10 @@ export function ProgressPage() {
   const encouragement = ENCOURAGEMENTS[Math.floor(Date.now() / 86400000) % ENCOURAGEMENTS.length]
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-1">My Progress</h1>
-        <p className="text-slate-400">Your personal learning journey.</p>
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">My Progress</h1>
+        <p className="text-slate-400 text-sm sm:text-base">Your personal learning journey.</p>
       </div>
 
       {/* Encouragement banner */}
@@ -43,7 +43,7 @@ export function ProgressPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {[
           { icon: <Flame className="text-orange-400" size={20} />, label: 'Day streak', value: '3', bg: 'bg-orange-400/10' },
           { icon: <Brain className="text-purple-400" size={20} />, label: 'Subjects', value: `${active.length}`, bg: 'bg-purple-400/10' },
@@ -75,17 +75,15 @@ export function ProgressPage() {
         <div className="flex flex-col gap-4">
           {active.map(({ subject: s, memory }) => (
             <Card key={s.id} className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: `${s.color}22` }}>
-                    {s.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">{s.name}</h3>
-                    <p className="text-xs text-slate-400">{memory?.session_count} sessions · {memory?.topics_covered.length} topics covered</p>
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: `${s.color}22` }}>
+                  {s.icon}
                 </div>
-                <Button size="sm" variant="secondary" onClick={() => navigate(`/chat?subject=${s.id}`)}>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-white truncate">{s.name}</h3>
+                  <p className="text-xs text-slate-400">{memory?.session_count} sessions · {memory?.topics_covered.length} topics covered</p>
+                </div>
+                <Button size="sm" variant="secondary" onClick={() => navigate(`/chat?subject=${s.id}`)} className="shrink-0">
                   Continue →
                 </Button>
               </div>

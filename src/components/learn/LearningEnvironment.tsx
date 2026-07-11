@@ -106,6 +106,7 @@ export function LearningEnvironment({ topic, onExit }: Props) {
   const [rightW,          setRightW]           = useState(RIGHT_PANEL_DEFAULT)
   const [dividerHovered,  setDividerHovered]   = useState(false)
   const [dividerDragging, setDividerDragging]  = useState(false)
+  const [isMobile,        setIsMobile]         = useState(() => window.innerWidth < 768)
 
   const startTime    = useRef(Date.now())
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -122,6 +123,12 @@ export function LearningEnvironment({ topic, onExit }: Props) {
   const subjectGrad   = subject?.gradient ?? 'linear-gradient(135deg,#4f46e5,#7c3aed)'
 
   useEffect(() => { voiceService.init() }, [])
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // ── Voice ─────────────────────────────────────────────────────────────────
   const handleSpeechEnd = useCallback(() => {
@@ -264,7 +271,7 @@ export function LearningEnvironment({ topic, onExit }: Props) {
   }
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#07091A', overflow: 'hidden', color: 'rgba(255,255,255,0.88)', fontFamily: "'Inter', system-ui, sans-serif", cursor: dividerDragging ? 'col-resize' : 'default' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#07091A', overflow: isMobile ? 'auto' : 'hidden', color: 'rgba(255,255,255,0.88)', fontFamily: "'Inter', system-ui, sans-serif", cursor: dividerDragging ? 'col-resize' : 'default' }}>
 
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', height: 52, background: subjectGrad, boxShadow: `0 2px 28px ${subjectColor}55` }}>
@@ -286,10 +293,10 @@ export function LearningEnvironment({ topic, onExit }: Props) {
       </div>
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', padding: '0 10px 10px', gap: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: isMobile ? 'column' : 'row', padding: '0 10px 10px', gap: 0, overflow: isMobile ? 'visible' : 'hidden' }}>
 
         {/* ── Widget column ──────────────────────────────────────────────── */}
-        <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 6 }}>
+        <div style={{ flex: isMobile ? 'none' : 1, height: isMobile ? 'clamp(240px, 55vw, 380px)' : undefined, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 8, paddingRight: isMobile ? 0 : 6 }}>
           {/* Instruction */}
           <div style={{ flexShrink: 0, ...accentCard, padding: '11px 16px', background: `${subjectColor}0a` }}>
             <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.88)', lineHeight: 1.45 }}>{step.instruction}</p>
@@ -311,13 +318,13 @@ export function LearningEnvironment({ topic, onExit }: Props) {
           </div>
         </div>
 
-        {/* ── Drag divider ───────────────────────────────────────────────── */}
+        {/* ── Drag divider (desktop only) ─────────────────────────────── */}
         <div
           onMouseDown={onDividerMouseDown}
           onMouseEnter={() => setDividerHovered(true)}
           onMouseLeave={() => setDividerHovered(false)}
           style={{
-            width: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 20, flexShrink: 0, display: isMobile ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'col-resize', zIndex: 10, position: 'relative',
           }}
           title="Drag to resize panels"
@@ -358,7 +365,7 @@ export function LearningEnvironment({ topic, onExit }: Props) {
         </div>
 
         {/* ── Right panel ────────────────────────────────────────────────── */}
-        <div style={{ width: rightW, minWidth: rightW, maxWidth: rightW, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 6, overflow: 'hidden' }}>
+        <div style={{ width: isMobile ? '100%' : rightW, minWidth: isMobile ? '100%' : rightW, maxWidth: isMobile ? '100%' : rightW, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: isMobile ? 0 : 6, overflow: isMobile ? 'visible' : 'hidden' }}>
 
           {/* Equation card */}
           {step.equation && (
@@ -372,13 +379,15 @@ export function LearningEnvironment({ topic, onExit }: Props) {
             </div>
           )}
 
-          {/* Check + Hint */}
-          <button onClick={handleCheck} style={{ flexShrink: 0, width: '100%', padding: '11px 0', borderRadius: 14, background: subjectGrad, border: 'none', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: `0 4px 20px ${subjectColor}45`, letterSpacing: '0.01em' }}>
-            ✓ Check
-          </button>
-          <button onClick={handleHint} style={{ flexShrink: 0, width: '100%', padding: '9px 0', borderRadius: 14, background: `${subjectColor}10`, border: `1px solid ${subjectColor}40`, color: subjectColor, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            💡 Hint
-          </button>
+          {/* Check + Hint — side by side on mobile */}
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={handleCheck} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: subjectGrad, border: 'none', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: `0 4px 20px ${subjectColor}45`, letterSpacing: '0.01em' }}>
+              ✓ Check
+            </button>
+            <button onClick={handleHint} style={{ flex: 1, padding: '10px 0', borderRadius: 14, background: `${subjectColor}10`, border: `1px solid ${subjectColor}40`, color: subjectColor, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              💡 Hint
+            </button>
+          </div>
 
           {/* Milestone */}
           <div style={{ flexShrink: 0, ...card, padding: '10px 14px' }}>
@@ -389,8 +398,8 @@ export function LearningEnvironment({ topic, onExit }: Props) {
             </p>
           </div>
 
-          {/* ── Chat panel — fills remaining height ─────────────────────── */}
-          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', ...card, overflow: 'hidden' }}>
+          {/* ── Chat panel ───────────────────────────────────────────────── */}
+          <div style={{ flex: isMobile ? 'none' : 1, height: isMobile ? 300 : undefined, minHeight: 0, display: 'flex', flexDirection: 'column', ...card, overflow: 'hidden' }}>
             {/* Chat header */}
             <div style={{ flexShrink: 0, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: subjectColor, boxShadow: `0 0 10px ${subjectColor}` }} />
@@ -398,7 +407,7 @@ export function LearningEnvironment({ topic, onExit }: Props) {
             </div>
 
             {/* Messages */}
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, scrollbarWidth: 'thin', scrollbarColor: `${subjectColor}30 transparent` }}>
+            <div style={{ flex: 1, minHeight: 0, height: isMobile ? 200 : undefined, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8, scrollbarWidth: 'thin', scrollbarColor: `${subjectColor}30 transparent` }}>
               {chatMsgs.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '16px 8px' }}>
                   <p style={{ margin: '0 0 5px', fontSize: 18 }}>💬</p>

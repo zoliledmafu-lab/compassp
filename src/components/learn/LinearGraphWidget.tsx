@@ -60,9 +60,17 @@ export function LinearGraphWidget({ gridRange, equation, value, onChange, onSize
   useEffect(() => {
     if (!drag) return
     const up = () => setDrag(null)
+    const onTouchMove = (e: TouchEvent) => { e.preventDefault(); handleMouseMove(e.touches[0] as unknown as MouseEvent) }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', up)
-    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', up) }
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', up)
+    }
   }, [drag, handleMouseMove])
 
   // Grid lines
@@ -128,19 +136,21 @@ export function LinearGraphWidget({ gridRange, equation, value, onChange, onSize
 
         {/* Slope handle */}
         <circle
-          cx={shX} cy={shY} r={9}
+          cx={shX} cy={shY} r={13}
           fill="#6366f1" stroke="white" strokeWidth={2}
           style={{ cursor: 'grab' }}
           onMouseDown={e => { e.stopPropagation(); setDrag('slope') }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDrag('slope') }}
         />
         <text x={shX} y={shY + 4} textAnchor="middle" fontSize={8} fill="white" fontWeight="700">m</text>
 
         {/* Intercept handle */}
         <circle
-          cx={ihX} cy={ihY} r={9}
+          cx={ihX} cy={ihY} r={13}
           fill="#0d9488" stroke="white" strokeWidth={2}
           style={{ cursor: 'grab' }}
           onMouseDown={e => { e.stopPropagation(); setDrag('intercept') }}
+          onTouchStart={e => { e.stopPropagation(); e.preventDefault(); setDrag('intercept') }}
         />
         <line x1={ihX - 5} y1={ihY} x2={ihX + 5} y2={ihY} stroke="white" strokeWidth={1.5} />
         <line x1={ihX} y1={ihY - 5} x2={ihX} y2={ihY + 5} stroke="white" strokeWidth={1.5} />
