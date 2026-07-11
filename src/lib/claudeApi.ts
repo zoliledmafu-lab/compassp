@@ -13,8 +13,12 @@ export async function streamCompletion(
   onError: (err: string) => void,
 ): Promise<void> {
   if (!API_KEY || API_KEY === 'placeholder_api_key') {
-    // Demo mode: simulate a contextual Socratic response
-    const demoResponse = getDemoResponse(messages)
+    // Parse scaffold level and frustration flag from system prompt meta marker
+    const levelMatch = systemPrompt.match(/\[META: scaffold_level=(\d)/)
+    const demoLevel = levelMatch ? (parseInt(levelMatch[1]) as 1 | 2 | 3 | 4) : 1
+    const frustMatch = systemPrompt.match(/frustration=(true|false)/)
+    const demoFrustrated = frustMatch?.[1] === 'true'
+    const demoResponse = getDemoResponse(messages, demoLevel, demoFrustrated)
     let i = 0
     const interval = setInterval(() => {
       if (i < demoResponse.length) {
@@ -408,88 +412,85 @@ function extractDemoInsights(subjectName: string, transcript: string): SessionIn
   return { topics: foundTopics.slice(0, 5), strengths, struggles, summary }
 }
 
-function getDemoResponse(messages: Message[]): string {
+function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrated = false): string {
   const userMsg = messages[messages.length - 1]?.content || ''
   const lower = userMsg.toLowerCase()
-
-  const prevAssistant = [...messages].reverse().find(m => m.role === 'assistant')?.content || ''
-  const alreadyAskedUnderstanding = /what do you (already )?know|walk me through|what.*you think/i.test(prevAssistant)
-  const alreadyAskedSpecific = /what part|where.*stuck|which step/i.test(prevAssistant)
   const turnCount = messages.filter(m => m.role === 'assistant').length
 
-  // ── Greetings ──────────────────────────────────────────────────
-  if (turnCount === 0 && /^(hello|hi|hey|good (morning|afternoon|evening))/i.test(lower)) {
-    return "Hey! 👋 I'm Compass — basically that friend who's weirdly enthusiastic about whatever subject you're studying and actually wants to help you get it.\n\nI'm not going to just hand you answers (sorry, not sorry — that's not how brains actually learn 😄), but I *will* walk through it with you until it clicks.\n\n**What are you working on? Hit me.**"
+  // ── Frustration acknowledgement (prepended when detected) ─────
+  const frustrationPrefix = frustrated
+    ? "Ndinzwisisa kuti zvinoda nguva — ita simba. Vanhu vakawanda vakapfuura pane zviri kukuvadza. Ngatiite zvishoma zvishoma.\n\n"
+    : ''
+
+  // ── Greeting ──────────────────────────────────────────────────
+  if (turnCount === 0 && /^(hello|hi|hey|good (morning|afternoon|evening)|sawubona|mhoro)/i.test(lower)) {
+    return "Hey! 👋 I'm Compass — your study companion. I won't just hand you answers, but I *will* walk through everything with you until it actually clicks.\n\n**What are you working on? Tell me.**"
   }
 
-  // ── Direct answer requests ─────────────────────────────────────
-  if (/just (give|tell|show) me the answer|what('s| is) the answer|solve (this|it) for me|give me the solution/i.test(lower)) {
-    return "Okay, I *hear* you — trust me, I get it. But if I just hand it over, you'll be back here with the exact same question before the exam, and that's worse for both of us 😅\n\nHere's the deal: **tell me what you've tried so far, even if it feels totally wrong.** Starting from your attempt is always way faster than starting from zero. What've you got?"
-  }
-
-  // ── After asking "what do you know" ───────────────────────────
-  if (alreadyAskedUnderstanding && turnCount >= 1) {
-    if (/difficult|hard|confus|don't know|nothing|no idea|not sure|lost/i.test(lower)) {
-      return `That's honestly a great place to start — "confused" just means there's one specific thing blocking everything else, and once we find it, it usually unlocks fast.\n\nLet me ask you this: **when you first read the question or saw this topic, was there ANY part that made sense at all?** Even something tiny. We'll build from there.`
+  // ── Level 1: One guiding question ─────────────────────────────
+  if (level === 1) {
+    if (/circle|equation.*circle|x.*².*y.*²/i.test(lower)) {
+      return `${frustrationPrefix}Before we work through this — **what do you think the numbers inside the brackets of a circle equation might represent?**`
     }
-    if (/square root|sqrt/i.test(lower)) {
-      return `Okay nice — you've named it! Square roots are sneaky because they're actually just the reverse of squaring, which you already know.\n\nQuick one: **what's 9²?** Don't overthink it. Just that.`
+    if (/quadratic|x²|parabola/i.test(lower)) {
+      return `${frustrationPrefix}Interesting — **what do you notice about the structure of a quadratic equation? What are the three parts it always has?**`
     }
-    return `Love that you shared that — really helps me understand where you're starting from.\n\nAlright, let's do this one piece at a time. **Can you describe the problem or concept in your own words?** Not the textbook definition — just how you'd explain it to a friend. What do you see?`
-  }
-
-  // ── After asking "what part specifically" ─────────────────────
-  if (alreadyAskedSpecific && turnCount >= 1) {
-    return `Got it, that's super helpful. Let's zoom right into that bit.\n\nHere's what I want you to try: **write out every step you DO know, even if you can't finish it.** Messy is fine. I just want to see where your thinking is at — that tells me exactly which one hint will unlock the rest for you.`
-  }
-
-  // ── Stuck / confused ──────────────────────────────────────────
-  if (/difficult|hard|confus|stuck|don't understand|i don't get|lost/i.test(lower)) {
+    if (/force|newton|motion/i.test(lower)) {
+      return `${frustrationPrefix}Let's start here: **when you push a stationary object and it starts moving, what do you think is causing that change?**`
+    }
+    if (/account|debit|credit|ledger/i.test(lower)) {
+      return `${frustrationPrefix}Good topic. **In a T-account, do you know which side debits go on — left or right?**`
+    }
+    if (/essay|paragraph|thesis/i.test(lower)) {
+      return `${frustrationPrefix}Before we plan the essay — **in one sentence, what is the ONE main point you want this essay to argue?**`
+    }
     if (turnCount === 0) {
-      return `Ugh, that feeling is the WORST — but honestly? Being stuck usually means you're right at the edge of figuring it out. Which is kind of exciting when you think about it 🤔\n\n**What exactly are you working on?** Give me the topic, the question, even just the word that's tripping you up. The more specific, the faster we crack it.`
+      return `${frustrationPrefix}Let's start at the beginning. **Can you tell me, in your own words, what this topic or question is asking you to do?**`
     }
-    return `Okay, let's slow way down for a second.\n\nForget the whole problem — just tell me: **what is the question actually asking you to find?** Put it in your own words, as rough as you want. Sometimes just saying it out loud is the thing that shifts it.`
+    return `${frustrationPrefix}**What do you already know about this — even if it feels incomplete?** Tell me whatever comes to mind first.`
   }
 
-  // ── Subject-specific ──────────────────────────────────────────
-  if (/square root|√|radical/i.test(lower)) {
-    return `Oh, square roots are one of those things that look scarier than they are — I promise.\n\nHere's the trick: a square root is just undoing a square. So **what's 9²?** Tell me that first, and I'll show you exactly how it connects back.`
-  }
-  if (/quadratic|x²|parabola/i.test(lower)) {
-    return `Quadratics! Okay so there are three ways to tackle these — factoring, completing the square, or the formula — and picking the right one is half the battle.\n\n**Which method do you think the question wants you to use?** Or if you're not sure, what does the equation look like? Show me what you're working with.`
-  }
-  if (/fraction|denominator|numerator/i.test(lower)) {
-    return `Fractions have completely different rules depending on what you're doing with them, so let's make sure we're on the same one.\n\n**Is this adding, subtracting, multiplying, or dividing?** Once I know that, the rule becomes really straightforward.`
-  }
-  if (/force|newton|acceleration|velocity|motion/i.test(lower)) {
-    return `Newton's laws — I love these because once they click, they explain SO much.\n\n**Which of his three laws do you think is in play here?** Don't worry about quoting it perfectly — just give me your gut feeling. What does the situation remind you of?`
-  }
-  if (/cell|dna|gene|protein|evolution|photosynthesis/i.test(lower)) {
-    return `Life Sciences is one of those subjects where everything connects to everything else, which is cool but also can feel overwhelming.\n\n**Walk me through what you already know about this** — like you're explaining it to a friend who missed class. Even an incomplete version. Go!`
-  }
-  if (/acid|base|pH|reaction|equation|mole|mol/i.test(lower)) {
-    return `Chemistry is 80% about setting up the problem right before you calculate anything.\n\nSo let's do that first: **what does the question give you, and what is it asking you to find?** Just list them out — don't solve yet. What do you see?`
-  }
-  if (/essay|paragraph|thesis|argument|writing/i.test(lower)) {
-    return `Here's the thing about essays: a strong one has ONE clear point it's trying to prove, and everything else backs it up.\n\n**In one sentence — what do you want your reader to believe by the end?** That's your thesis. Don't worry if it sounds rough, we'll sharpen it. What do you have?`
+  // ── Level 2: Stepping-stone hint ──────────────────────────────
+  if (level === 2) {
+    if (/circle|equation.*circle/i.test(lower)) {
+      return `${frustrationPrefix}Here's a key piece: in a circle equation like **(x − h)² + (y − k)² = r²**, the values *h* and *k* inside the brackets give you the **centre** of the circle, and *r²* gives you the radius.\n\n**Now look at your equation — can you pick out what h and k are?**`
+    }
+    if (/quadratic|x²/i.test(lower)) {
+      return `${frustrationPrefix}One useful thing to know: in **y = ax² + bx + c**, the sign of *a* tells you if the parabola opens upward (positive) or downward (negative).\n\n**What is the value of *a* in your equation, and what does that tell you about the shape?**`
+    }
+    if (/account|debit|credit/i.test(lower)) {
+      return `${frustrationPrefix}Quick reminder: **debits always go on the LEFT side of a T-account, credits on the RIGHT**. Assets increase on the debit side; liabilities increase on the credit side.\n\n**Now, which account are you working with, and does it increase or decrease with your transaction?**`
+    }
+    if (turnCount === 0) {
+      return `${frustrationPrefix}Here's a starting hint: **break the problem into what you're *given* and what you're *asked to find*.** List those two things out — don't solve yet.\n\n**What does the question give you, and what does it want?**`
+    }
+    return `${frustrationPrefix}Let me give you one stepping stone: **the key technique here is to look at the relationship between the two values before doing any calculation.**\n\n**Can you describe what you see when you compare them?**`
   }
 
-  // ── Ongoing conversation ──────────────────────────────────────
-  if (turnCount >= 3) {
-    const followUps = [
-      `Okay you're actually getting somewhere here — I can see it. Let's keep the momentum going.\n\n**What do you think happens next in this process?** Take a shot at it, even if you're 50/50. I'll jump in if you need it.`,
-      `Good, good — now here's the real question: **can you tell me WHY that step works?** Not just what it is — why it's valid. That's the thing that actually makes it stick in an exam.`,
-      `Let's do a quick "teaching test" — if your friend texted you right now asking about this exact concept, **how would you explain what we just worked through?** Your own words, zero pressure.`,
-      `You're closer than you think. Just one thing to check: **does your answer make sense in the real world?** Does the number feel right? Does the direction of the effect make sense? What's your gut say?`,
-    ]
-    return followUps[turnCount % followUps.length]
+  // ── Level 3: Worked example with different numbers ─────────────
+  if (level === 3) {
+    if (/circle|equation.*circle/i.test(lower)) {
+      return `${frustrationPrefix}Let me show you how this works with a different example:\n\n**Example:** Find the centre and radius of *(x − 3)² + (y + 1)² = 25*\n\n**Step 1:** The equation form is *(x − h)² + (y − k)² = r²*\n**Step 2:** Compare: h = **3**, k = **−1** (note the sign flip — the bracket says +1, so k = −1)\n**Step 3:** r² = 25, so r = **5**\n**Answer:** Centre = (3, −1), Radius = 5\n\nNotice how the sign inside the bracket flips when you read off the centre.\n\n**Now apply those exact steps to your equation. What do you get?**`
+    }
+    if (/quadratic|x²/i.test(lower)) {
+      return `${frustrationPrefix}Let me work through a similar one:\n\n**Example:** Factorise x² + 7x + 12\n\n**Step 1:** Find two numbers that *multiply* to 12 and *add* to 7\n**Step 2:** 3 × 4 = 12 ✓ and 3 + 4 = 7 ✓\n**Step 3:** So x² + 7x + 12 = **(x + 3)(x + 4)**\n\nThe trick is always: multiply to the constant, add to the middle coefficient.\n\n**Now try that method on your quadratic. What two numbers do you need?**`
+    }
+    if (/account|debit|credit/i.test(lower)) {
+      return `${frustrationPrefix}Here's a worked example using a different transaction:\n\n**Example:** A business receives $500 cash for services rendered.\n\n| Account | Debit | Credit |\n|---|---|---|\n| Cash (Asset ↑) | 500 | |\n| Service Revenue | | 500 |\n\n*Cash increases → debit. Revenue earned → credit.*\n\n**Now set up the T-accounts for your transaction the same way. What increases and what does it affect?**`
+    }
+    return `${frustrationPrefix}Let me show you a worked example of a similar problem:\n\n**Example problem (different numbers):**\nIf x + 3 = 7, find x.\n**Step 1:** Isolate x — subtract 3 from both sides\n**Step 2:** x = 7 − 3 = **4**\n\nThe method: whatever operation is applied to x, do the *inverse* on both sides.\n\n**Now apply that same method to your problem. What's the first step?**`
   }
 
-  // ── Generic opener ────────────────────────────────────────────
-  const openers = [
-    `Okay, let's get into it!\n\nBefore I say anything else — **what's your first instinct about how to start this?** Doesn't have to be right, just tell me what comes to mind first.`,
-    `Let's figure this out together.\n\nFirst move: **what information does the question actually give you?** Just list out everything you know from the problem. That alone usually reveals more than you'd expect.`,
-    `Alright, I'm with you on this.\n\n**Have you seen something similar before?** Even loosely? If so, what did you do then? Starting from what's already familiar is always the fastest way in.`,
-  ]
-  return openers[messages.filter(m => m.role === 'user').length % openers.length]
+  // ── Level 4: Full explanation + new practice problem ───────────
+  if (level === 4) {
+    if (/circle|equation.*circle/i.test(lower)) {
+      return `${frustrationPrefix}Let me explain this completely.\n\nA **circle equation** in standard form is: **(x − h)² + (y − k)² = r²**\n\n- **(h, k)** is the **centre** of the circle\n- **r** is the **radius** (square root of the number on the right)\n- The signs *flip*: if the equation says *(x − 5)*, the x-coordinate of the centre is **+5**; if it says *(x + 2)*, the centre is at **−2**\n\nThis works because the equation measures the distance from any point on the circle to the centre.\n\n---\n\n**Now your turn — new practice problem:**\nFind the centre and radius of: **(x + 4)² + (y − 6)² = 49**\n\nWork through it and tell me your answer.`
+    }
+    if (/account|debit|credit/i.test(lower)) {
+      return `${frustrationPrefix}Here is the complete picture for double-entry bookkeeping.\n\nEvery transaction affects **two accounts**. The rule is:\n- **Assets and Expenses** → increase on the **DEBIT (left)** side\n- **Liabilities, Equity, and Revenue** → increase on the **CREDIT (right)** side\n- Total debits must always **equal** total credits\n\nTo record any transaction: identify the two accounts affected, decide which increases and which decreases, then apply the rule above.\n\n---\n\n**New practice problem:**\nA business pays $200 cash to buy office supplies.\n- Which two accounts are affected?\n- Which is debited and which is credited?\n\nWrite out the T-account entries and tell me your answer.`
+    }
+    return `${frustrationPrefix}Let me give you the full explanation.\n\nWhen solving this type of problem, the method is always:\n1. **Identify** what you're given and what you need to find\n2. **Choose** the right formula or rule that links them\n3. **Substitute** your values carefully\n4. **Check** your answer makes sense in context\n\nThe key insight you need here is to look at the relationship between the quantities — one is always expressed in terms of the other.\n\n---\n\n**New practice problem to try:**\nIf a car travels at 60 km/h for 2.5 hours, how far does it travel?\n\nWork through the four steps above and show me your working.`
+  }
+
+  return `${frustrationPrefix}**What part of this problem would you like to start with?**`
 }

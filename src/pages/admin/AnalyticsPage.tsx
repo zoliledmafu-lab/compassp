@@ -1,103 +1,208 @@
-import { BarChart3, TrendingUp, Users, MessageSquare, Clock, AlertTriangle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { BarChart3, TrendingUp, Users, MessageSquare, AlertTriangle } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
+import { useAuth } from '../../contexts/AuthContext'
+import { useLanguage } from '../../contexts/LanguageContext'
+import { supabase, SUPABASE_ENABLED } from '../../lib/supabase'
 
-const MOCK_SUBJECT_USAGE = [
-  { subject: 'Mathematics', sessions: 45, avgDuration: '28 min', hints: 312 },
-  { subject: 'Physical Sciences', sessions: 38, avgDuration: '22 min', hints: 245 },
-  { subject: 'Life Sciences', sessions: 29, avgDuration: '18 min', hints: 187 },
-  { subject: 'English', sessions: 24, avgDuration: '15 min', hints: 142 },
-  { subject: 'Accounting', sessions: 18, avgDuration: '32 min', hints: 221 },
-]
+interface SubjectStat { subject: string; sessions: number }
+interface AttemptLog  { student: string; subject: string; count: number; date: string }
 
-const MAX_SESSIONS = Math.max(...MOCK_SUBJECT_USAGE.map(s => s.sessions))
+interface Stats {
+  activeStudents: number
+  totalSessions: number
+  subjectStats: SubjectStat[]
+  attemptLogs: AttemptLog[]
+}
+
+const EMPTY: Stats = { activeStudents: 0, totalSessions: 0, subjectStats: [], attemptLogs: [] }
 
 export function AnalyticsPage() {
+  const { user } = useAuth()
+  const { t }    = useLanguage()
+  const [stats,   setStats]   = useState<Stats>(EMPTY)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return
+    loadStats()
+  }, [user]) // eslint-disable-line
+
+  async function loadStats() {
+    setLoading(true)
+    try {
+      if (!SUPABASE_ENABLED || user!.id.startsWith('user-')) {
+        setStats(EMPTY)
+        setLoading(false)
+        return
+      }
+
+      const schoolName = user!.school_name || ''
+      if (!schoolName) { setStats(EMPTY); setLoading(false); return }
+
+      // Students at this school
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('role', 'student')
+        .eq('school_name', schoolName)
+
+      if (!profiles?.length) { setStats(EMPTY); setLoading(false); return }
+
+      const ids = profiles.map(p => p.id)
+      const nameMap: Record<string, string> = Object.fromEntries(profiles.map(p => [p.id, p.full_name]))
+
+      // Chat sessions for those students
+      const { data: sessions } = await supabase
+        .from('chat_sessions')
+        .select('student_id, subject, messages, last_active')
+        .in('student_id', ids)
+
+      const rows = sessions ?? []
+      const totalSessions  = rows.length
+      const activeStudents = new Set(rows.map(r => r.student_id)).size
+
+      // Sessions by subject
+      const subjectCount: Record<string, number> = {}
+      for (const r of rows) {
+        subjectCount[r.subject] = (subjectCount[r.subject] ?? 0) + 1
+      }
+      const subjectStats: SubjectStat[] = Object.entries(subjectCount)
+        .map(([subject, sessions]) => ({ subject, sessions }))
+        .sort((a, b) => b.sessions - a.sessions)
+        .slice(0, 8)
+
+      // Direct answer attempt logs — scan message content
+      const attemptLogs: AttemptLog[] = []
+      const directPatterns = [/just (give|tell|show) me the answer/i, /what('s| is) the answer/i, /solve (this|it) for me/i, /just tell me/i]
+      const recentCutoff = Date.now() - 7 * 86_400_000
+
+      for (const r of rows) {
+        if (!r.last_active || new Date(r.last_active).getTime() < recentCutoff) continue
+        const msgs: { role: string; content: string }[] = Array.isArray(r.messages) ? r.messages : []
+        const count = msgs.filter(m => m.role === 'user' && directPatterns.some(p => p.test(m.content))).length
+        if (count > 0) {
+          attemptLogs.push({
+            student: nameMap[r.student_id] ? nameMap[r.student_id].split(' ')[0] + ' ' + (nameMap[r.student_id].split(' ')[1]?.charAt(0) ?? '') + '.' : '—',
+            subject: r.subject,
+            count,
+            date: r.last_active,
+          })
+        }
+      }
+      attemptLogs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+      setStats({ activeStudents, totalSessions, subjectStats, attemptLogs: attemptLogs.slice(0, 10) })
+    } catch {
+      setStats(EMPTY)
+    }
+    setLoading(false)
+  }
+
+  function formatDate(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime()
+    const days = Math.floor(diff / 86_400_000)
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    return `${days} days ago`
+  }
+
+  const maxSessions = Math.max(...stats.subjectStats.map(s => s.sessions), 1)
+  const hasData     = stats.totalSessions > 0
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-8 flex items-center gap-3">
         <BarChart3 size={24} className="text-indigo-400" />
         <div>
-          <h1 className="text-2xl font-bold text-white">Analytics</h1>
-          <p className="text-slate-400 text-sm">Institution-wide usage data. Not visible to students.</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin_analytics_title')}</h1>
+          <p className="text-slate-400 text-sm">
+            {t('admin_analytics_desc')}
+            {user?.school_name && <span className="text-indigo-400"> — {user.school_name}</span>}
+          </p>
         </div>
       </div>
 
-      {/* Top stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[
-          { icon: <Users size={18} className="text-indigo-400" />, label: 'Active students', value: '5' },
-          { icon: <MessageSquare size={18} className="text-purple-400" />, label: 'Total sessions', value: '154' },
-          { icon: <Clock size={18} className="text-cyan-400" />, label: 'Avg. session', value: '23 min' },
-          { icon: <AlertTriangle size={18} className="text-amber-400" />, label: 'Direct answer attempts', value: '12' },
-        ].map(stat => (
-          <Card key={stat.label} className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              {stat.icon}
-              <span className="text-xs text-slate-400">{stat.label}</span>
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : !hasData ? (
+        <div className="text-center py-16">
+          <BarChart3 size={40} className="text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-300 font-medium">{t('admin_no_data')}</p>
+        </div>
+      ) : (
+        <>
+          {/* Top stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {[
+              { icon: <Users size={18} className="text-indigo-400" />,     label: t('admin_stat_active'),   value: String(stats.activeStudents) },
+              { icon: <MessageSquare size={18} className="text-purple-400" />, label: t('admin_stat_sessions'), value: String(stats.totalSessions) },
+              { icon: <AlertTriangle size={18} className="text-amber-400" />, label: t('admin_stat_attempts'), value: String(stats.attemptLogs.reduce((s, l) => s + l.count, 0)) },
+            ].map(stat => (
+              <Card key={stat.label} className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  {stat.icon}
+                  <span className="text-xs text-slate-400">{stat.label}</span>
+                </div>
+                <span className="text-2xl font-bold text-white">{stat.value}</span>
+              </Card>
+            ))}
+          </div>
+
+          {/* Sessions by subject */}
+          <Card className="mb-6">
+            <h2 className="font-semibold text-white mb-5 flex items-center gap-2">
+              <TrendingUp size={16} className="text-indigo-400" /> {t('admin_sessions_by_subject')}
+            </h2>
+            <div className="flex flex-col gap-3">
+              {stats.subjectStats.map(item => (
+                <div key={item.subject}>
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-slate-300">{item.subject}</span>
+                    <span className="text-slate-500 text-xs">{item.sessions} sessions</span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-2">
+                    <div
+                      className="gradient-primary h-2 rounded-full transition-all"
+                      style={{ width: `${(item.sessions / maxSessions) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-            <span className="text-2xl font-bold text-white">{stat.value}</span>
           </Card>
-        ))}
-      </div>
 
-      {/* Subject usage chart */}
-      <Card className="mb-6">
-        <h2 className="font-semibold text-white mb-5 flex items-center gap-2">
-          <TrendingUp size={16} className="text-indigo-400" /> Sessions by Subject
-        </h2>
-        <div className="flex flex-col gap-3">
-          {MOCK_SUBJECT_USAGE.map(item => (
-            <div key={item.subject}>
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-slate-300">{item.subject}</span>
-                <div className="flex items-center gap-4 text-slate-500 text-xs">
-                  <span>{item.sessions} sessions</span>
-                  <span>{item.avgDuration} avg</span>
-                  <span>{item.hints} hints</span>
-                </div>
+          {/* Direct answer attempts */}
+          {stats.attemptLogs.length > 0 && (
+            <Card>
+              <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
+                <AlertTriangle size={16} className="text-amber-400" /> {t('admin_attempts_log')}
+              </h2>
+              <div className="flex flex-col gap-3">
+                {stats.attemptLogs.map((log, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 gradient-primary rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
+                        {log.student.charAt(0)}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-white">{log.student}</span>
+                        <span className="text-xs text-slate-500 ml-2">{log.subject}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">{log.count}× attempts</span>
+                      <span className="text-xs text-slate-500">{formatDate(log.date)}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="w-full bg-white/5 rounded-full h-2">
-                <div
-                  className="gradient-primary h-2 rounded-full transition-all"
-                  style={{ width: `${(item.sessions / MAX_SESSIONS) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Direct answer attempt log */}
-      <Card>
-        <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-          <AlertTriangle size={16} className="text-amber-400" /> Direct Answer Attempts (last 7 days)
-        </h2>
-        <div className="flex flex-col gap-3">
-          {[
-            { student: 'Thabo S.', subject: 'Mathematics', count: 4, date: 'Today' },
-            { student: 'Ayanda D.', subject: 'Physical Sciences', count: 3, date: 'Yesterday' },
-            { student: 'Sipho M.', subject: 'Accounting', count: 2, date: '3 days ago' },
-            { student: 'Nomsa Z.', subject: 'isiZulu', count: 2, date: '5 days ago' },
-            { student: 'Lethiwe N.', subject: 'Life Sciences', count: 1, date: '6 days ago' },
-          ].map(log => (
-            <div key={log.student + log.date} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 gradient-primary rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  {log.student.charAt(0)}
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-white">{log.student}</span>
-                  <span className="text-xs text-slate-500 ml-2">{log.subject}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">{log.count}x attempts</span>
-                <span className="text-xs text-slate-500">{log.date}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   )
 }

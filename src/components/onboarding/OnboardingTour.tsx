@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, ChevronRight, Compass, MessageSquare, Layout, Mic, BookOpen } from 'lucide-react'
+import { X, ChevronRight, Compass, MessageSquare, Layout, BookOpen } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
 interface Step {
@@ -14,7 +14,7 @@ const STEPS: Step[] = [
   {
     icon: <Compass size={28} />,
     title: 'Welcome to Compass!',
-    body: "You're in. Let me give you a 30-second tour so you know exactly what's here.",
+    body: "You're in. Let me give you a quick tour so you know exactly what's here.",
     accent: '#6366f1',
   },
   {
@@ -37,13 +37,6 @@ const STEPS: Step[] = [
     body: "The Canvas is your personal whiteboard. Drag in notes, images, and ideas. Great for mind maps and revision boards before an exam.",
     accent: '#10b981',
   },
-  {
-    icon: <Mic size={28} />,
-    title: 'Voice companion',
-    body: "See that ◈ button in the bottom-right? Click it, then click the mic to start talking. Compass will listen, then talk back. Say stop when you're done.",
-    accent: '#f59e0b',
-    tip: 'Works best in Chrome. The companion can also see your screen in the desktop app.',
-  },
 ]
 
 export function OnboardingTour() {
@@ -54,17 +47,15 @@ export function OnboardingTour() {
 
   useEffect(() => {
     if (!user) return
-    const key = `compass_onboarding_v1_${user.id}`
-    if (!localStorage.getItem(key)) {
-      const t = setTimeout(() => setVisible(true), 900)
-      return () => clearTimeout(t)
-    }
+    if (!sessionStorage.getItem('compass_new_signup')) return
+    sessionStorage.removeItem('compass_new_signup')
+    const t = setTimeout(() => setVisible(true), 900)
+    return () => clearTimeout(t)
   }, [user])
 
   const close = () => {
     setExiting(true)
     setTimeout(() => {
-      if (user) localStorage.setItem(`compass_onboarding_v1_${user.id}`, '1')
       setVisible(false)
       setExiting(false)
     }, 180)

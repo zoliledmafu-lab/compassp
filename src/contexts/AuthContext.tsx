@@ -189,6 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profile: UserProfile = { id: `user-${Date.now()}`, email: email.toLowerCase(), full_name: fullName, role, school_name: schoolName, created_at: new Date().toISOString(), curricula }
       users[email.toLowerCase()] = { ...profile, password }
       saveDemoUsers(users)
+      sessionStorage.setItem('compass_new_signup', '1')
       setUser(profile)
       localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(profile))
       return {}
@@ -211,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch { /* table might not exist yet */ }
 
     const profile = await resolveProfile(data.user)
+    sessionStorage.setItem('compass_new_signup', '1')
     setUser(profile)
     return {}
   }, [])

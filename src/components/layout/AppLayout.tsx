@@ -1,6 +1,5 @@
 import { Outlet, Navigate } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
-import { Companion } from '../companion/Companion'
 import { OnboardingTour } from '../onboarding/OnboardingTour'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -17,7 +16,6 @@ export function AppLayout() {
 
   if (!user) return <Navigate to="/login" replace />
 
-  // New Google OAuth users land here with no curricula — send them to onboarding
   if (!user.curricula || user.curricula.length === 0) return <Navigate to="/onboarding" replace />
 
   return (
@@ -26,7 +24,6 @@ export function AppLayout() {
       <main className="flex-1 overflow-auto">
         <Outlet />
       </main>
-      <Companion />
       <OnboardingTour />
     </div>
   )

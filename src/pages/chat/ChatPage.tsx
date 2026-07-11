@@ -4,14 +4,14 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
   Send, Paperclip, Volume2, VolumeX, RefreshCw,
-  Lightbulb, ChevronDown, Mic, MicOff, Clock,
+  Lightbulb, BookOpen, ChevronDown, Mic, MicOff, Clock,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useRules } from '../../contexts/RulesContext'
 import { useMemory } from '../../contexts/MemoryContext'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { supabase, SUPABASE_ENABLED } from '../../lib/supabase'
-import { buildSystemPrompt, detectDirectAnswerAttempt } from '../../lib/ruleEngine'
+import { buildSystemPrompt, detectFrustration, getScaffoldLevel } from '../../lib/ruleEngine'
 import { streamCompletion, extractSessionInsights } from '../../lib/claudeApi'
 import { getSubject, SUBJECTS } from '../../lib/subjects'
 import { getPinnedSubjects, getCurriculumSubjects } from '../../lib/pinnedSubjects'
@@ -119,6 +119,7 @@ export function ChatPage() {
   const [streaming, setStreaming] = useState(false)
   const [streamingText, setStreamingText] = useState('')
   const [hintCount, setHintCount] = useState(0)
+  const [frustrationDetected, setFrustrationDetected] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(false)
   const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female')
   const [showSubjectPicker, setShowSubjectPicker] = useState(false)
@@ -131,8 +132,9 @@ export function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const recognitionRef = useRef<any>(null)
   const currentStreamRef = useRef('')
-  // keep a ref to messages for use inside unmount callback
   const messagesRef = useRef<Message[]>([])
+  // Tracks last 3 user messages for repeated-question frustration detection
+  const recentUserMsgsRef = useRef<string[]>([])
 
   // ── Load / resume session ──────────────────────────────────────
 
@@ -158,6 +160,8 @@ export function ChatPage() {
         setResumedFrom(null)
       }
       setHintCount(0)
+      setFrustrationDetected(false)
+      recentUserMsgsRef.current = []
       setError('')
     })
   }, [user?.id, subjectId]) // eslint-disable-line
@@ -223,7 +227,13 @@ export function ChatPage() {
     if (!content.trim() || streaming || !user) return
     setError('')
 
-    const isDirect = detectDirectAnswerAttempt(content)
+    // Detect frustration before updating state so we can pass it to the prompt synchronously
+    const isFrustrated = detectFrustration(content, recentUserMsgsRef.current)
+    setFrustrationDetected(isFrustrated)
+
+    // Track last 3 user messages for repeated-question detection
+    recentUserMsgsRef.current = [...recentUserMsgsRef.current.slice(-2), content]
+
     const newMessages: Message[] = [...messages, { role: 'user', content }]
     setMessages(newMessages)
     messagesRef.current = newMessages
@@ -233,7 +243,7 @@ export function ChatPage() {
     currentStreamRef.current = ''
 
     const memory = getMemory(user.id, subjectId)
-    const systemPrompt = buildSystemPrompt(rules, subject, memory, hintCount, aiInstruction)
+    const systemPrompt = buildSystemPrompt(rules, subject, memory, hintCount, aiInstruction, isFrustrated)
 
     await streamCompletion(
       systemPrompt,
@@ -248,7 +258,6 @@ export function ChatPage() {
         setMessages(final)
         messagesRef.current = final
 
-        // Persist chat data (fire-and-forget)
         saveChatData(user.id, subjectId, {
           messages: final,
           sessionBoundaries: sessionBoundaries,
@@ -259,9 +268,8 @@ export function ChatPage() {
         setStreaming(false)
         speak(currentStreamRef.current)
 
-        if (!isDirect) {
-          setHintCount(c => c + 1)
-        }
+        // Always increment — every exchange advances the scaffold level
+        setHintCount(c => c + 1)
 
         // After every 4 assistant messages, refresh memory insights in the background
         const assistantCount = final.filter(m => m.role === 'assistant').length
@@ -326,8 +334,10 @@ export function ChatPage() {
     setSessionBoundaries([])
     setResumedFrom(null)
     messagesRef.current = []
+    recentUserMsgsRef.current = []
     clearChatData(user.id, subjectId)
     setHintCount(0)
+    setFrustrationDetected(false)
   }
 
   const handleUploadContext = (context: string) => {
@@ -350,12 +360,7 @@ export function ChatPage() {
             <span className="text-white">{subject.name}</span>
             <ChevronDown size={14} className="text-slate-400" />
           </button>
-          {hintCount > 0 && (
-            <span className="text-xs text-slate-500 flex items-center gap-1">
-              <Lightbulb size={12} className="text-amber-400" />
-              {hintCount} hint{hintCount !== 1 ? 's' : ''} this session
-            </span>
-          )}
+          <ScaffoldIndicator hintCount={hintCount} maxScaffoldLevel={rules.max_scaffold_level ?? 3} />
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -524,6 +529,29 @@ export function ChatPage() {
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────
+
+function ScaffoldIndicator({ hintCount, maxScaffoldLevel }: { hintCount: number; maxScaffoldLevel: number }) {
+  const level = getScaffoldLevel(hintCount, maxScaffoldLevel)
+  if (level === 1) return null
+  if (level === 2) return (
+    <span className="text-xs text-amber-400/80 flex items-center gap-1">
+      <Lightbulb size={12} />
+      Getting a hint
+    </span>
+  )
+  if (level === 3) return (
+    <span className="text-xs text-amber-400 flex items-center gap-1 font-medium">
+      <Lightbulb size={12} />
+      Seeing an example
+    </span>
+  )
+  return (
+    <span className="text-xs text-purple-400 flex items-center gap-1 font-medium">
+      <BookOpen size={12} />
+      Full explanation mode
+    </span>
+  )
+}
 
 function SessionDivider({ date }: { date: Date | null }) {
   const label = date

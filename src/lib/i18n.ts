@@ -55,6 +55,26 @@ export interface Translations {
   dash_no_subjects_sub: string
   // Language picker label
   lang_label: string
+  // Admin — Students
+  admin_students_title: string
+  admin_students_desc: string
+  admin_search: string
+  admin_col_student: string
+  admin_col_subjects: string
+  admin_col_sessions: string
+  admin_col_last_active: string
+  admin_no_students: string
+  admin_no_students_sub: string
+  // Admin — Analytics
+  admin_analytics_title: string
+  admin_analytics_desc: string
+  admin_stat_active: string
+  admin_stat_sessions: string
+  admin_stat_avg: string
+  admin_stat_attempts: string
+  admin_sessions_by_subject: string
+  admin_attempts_log: string
+  admin_no_data: string
 }
 
 export const translations: Record<Language, Translations> = {
@@ -94,6 +114,24 @@ export const translations: Record<Language, Translations> = {
     dash_no_subjects: 'No subjects yet',
     dash_no_subjects_sub: 'Add the subjects you\'re studying to track your progress here.',
     lang_label: 'Language',
+    admin_students_title: 'Students',
+    admin_students_desc: 'Students registered at your school',
+    admin_search: 'Search students…',
+    admin_col_student: 'Student',
+    admin_col_subjects: 'Subjects',
+    admin_col_sessions: 'Sessions',
+    admin_col_last_active: 'Last active',
+    admin_no_students: 'No students yet',
+    admin_no_students_sub: 'Students who register under your school name will appear here.',
+    admin_analytics_title: 'Analytics',
+    admin_analytics_desc: 'School-wide usage data. Not visible to students.',
+    admin_stat_active: 'Active students',
+    admin_stat_sessions: 'Total sessions',
+    admin_stat_avg: 'Avg. session length',
+    admin_stat_attempts: 'Direct answer attempts',
+    admin_sessions_by_subject: 'Sessions by Subject',
+    admin_attempts_log: 'Direct Answer Attempts (last 7 days)',
+    admin_no_data: 'No data yet — usage will appear here once students start sessions.',
   },
 
   sn: {
@@ -132,6 +170,24 @@ export const translations: Record<Language, Translations> = {
     dash_no_subjects: 'Hapana zvidzidzo',
     dash_no_subjects_sub: 'Wedzera zvidzidzo zvaunodzidza kutevedza budiriro yako pano.',
     lang_label: 'Mutauro',
+    admin_students_title: 'Vadzidzi',
+    admin_students_desc: 'Vadzidzi vakanyoresa pachikoro chenyu',
+    admin_search: 'Tsvaka vadzidzi…',
+    admin_col_student: 'Mudzidzi',
+    admin_col_subjects: 'Zvidzidzo',
+    admin_col_sessions: 'Marongero',
+    admin_col_last_active: 'Akaona kupedzisira',
+    admin_no_students: 'Hapana vadzidzi',
+    admin_no_students_sub: 'Vadzidzi vanonyoresa pachikoro chenyu vachaonekwa pano.',
+    admin_analytics_title: 'Ongororo',
+    admin_analytics_desc: 'Ruzivo rwechikoro chese. Haruonekwi nevadzidzi.',
+    admin_stat_active: 'Vadzidzi vanoita basa',
+    admin_stat_sessions: 'Marongero ese',
+    admin_stat_avg: 'Nguva yerorongero',
+    admin_stat_attempts: 'Miedzo yekubvunza mhinduro',
+    admin_sessions_by_subject: 'Marongero neChidzidzo',
+    admin_attempts_log: 'Miedzo yeMhinduro (mazuva 7 apfuura)',
+    admin_no_data: 'Hapana ruzivo — ruzivo ruchaonekwa vadzidzi vasati vatanga.',
   },
 
   nd: {
@@ -170,5 +226,23 @@ export const translations: Record<Language, Translations> = {
     dash_no_subjects: 'Azikho izifundo',
     dash_no_subjects_sub: 'Engeza izifundo ofunda zona ukuze ulandele intuthuko yakho lapha.',
     lang_label: 'Ulimi',
+    admin_students_title: 'Abafundi',
+    admin_students_desc: 'Abafundi ababhalise esikoleni sakho',
+    admin_search: 'Sesha abafundi…',
+    admin_col_student: 'Umfundi',
+    admin_col_subjects: 'Izifundo',
+    admin_col_sessions: 'Izikhathi',
+    admin_col_last_active: 'Ukusebenzelwa kwakamuva',
+    admin_no_students: 'Abekho abafundi',
+    admin_no_students_sub: 'Abafundi ababhalisa esikoleni sakho bazovela lapha.',
+    admin_analytics_title: 'Ukuhlaziywa',
+    admin_analytics_desc: 'Idatha yesikole sonke. Abafundi abayiboni.',
+    admin_stat_active: 'Abafundi abakhuthele',
+    admin_stat_sessions: 'Izikhathi zonke',
+    admin_stat_avg: 'Isikhathi esikhathi',
+    admin_stat_attempts: 'Imizamo yezimpendulo',
+    admin_sessions_by_subject: 'Izikhathi ngeSifundo',
+    admin_attempts_log: 'Imizamo Yezimpendulo (izinsuku ezingu-7)',
+    admin_no_data: 'Ayikho idatha — izovela lapho abafundi beqala izithangami.',
   },
 }

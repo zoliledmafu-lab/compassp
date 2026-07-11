@@ -51,6 +51,10 @@ export interface RuleConfig {
   always_encouraging: boolean
   max_hints_before_break: number
   flag_repeated_answer_attempts: boolean
+  // Progressive scaffolding settings
+  max_scaffold_level: number                   // hintCount at which Level 4 triggers (default 3)
+  emotional_detection_enabled: boolean         // detect & acknowledge frustration signals (default true)
+  celebration_tone: 'formal' | 'informal'      // tone for correct-answer praise (default 'informal')
   updated_at: string
 }
 
