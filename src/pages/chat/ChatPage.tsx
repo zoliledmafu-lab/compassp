@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import {
   Send, Paperclip, Volume2, VolumeX, RefreshCw,
   Lightbulb, BookOpen, ChevronDown, Mic, MicOff, Clock,
+  Wifi, Smartphone,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useRules } from '../../contexts/RulesContext'
@@ -15,6 +16,7 @@ import { buildSystemPrompt, detectFrustration, getScaffoldLevel } from '../../li
 import { streamCompletion, extractSessionInsights } from '../../lib/claudeApi'
 import { getSubject, SUBJECTS } from '../../lib/subjects'
 import { getPinnedSubjects, getCurriculumSubjects } from '../../lib/pinnedSubjects'
+import { initOfflineModel, isOfflineReady, askOffline } from '../../lib/offlineAI'
 import { Button } from '../../components/ui/Button'
 import { UploadPanel } from '../../components/chat/UploadPanel'
 import type { Message } from '../../lib/claudeApi'
@@ -127,6 +129,10 @@ export function ChatPage() {
   const [listening, setListening] = useState(false)
   const [error, setError] = useState('')
   const [resumedFrom, setResumedFrom] = useState<Date | null>(null)
+  const [offlineMode, setOfflineMode] = useState(false)
+  const [offlineReady, setOfflineReady] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadPct, setDownloadPct] = useState(0)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -245,6 +251,26 @@ export function ChatPage() {
     const memory = getMemory(user.id, subjectId)
     const systemPrompt = buildSystemPrompt(rules, subject, memory, hintCount, aiInstruction, isFrustrated)
 
+    if (offlineMode && isOfflineReady()) {
+      try {
+        const reply = await askOffline(content, 'en')
+        const assistantMsg: Message = { role: 'assistant', content: reply }
+        const final = [...newMessages, assistantMsg]
+        setMessages(final)
+        messagesRef.current = final
+        saveChatData(user.id, subjectId, { messages: final, sessionBoundaries, lastActive: Date.now() })
+        setStreamingText('')
+        setStreaming(false)
+        speak(reply)
+        setHintCount(c => c + 1)
+      } catch (err) {
+        setError('Offline model error: ' + String(err))
+        setStreaming(false)
+        setStreamingText('')
+      }
+      return
+    }
+
     await streamCompletion(
       systemPrompt,
       newMessages,
@@ -293,7 +319,7 @@ export function ChatPage() {
         setStreamingText('')
       }
     )
-  }, [messages, sessionBoundaries, streaming, user, rules, subject, hintCount, getMemory, updateMemory, subjectId, speak])
+  }, [messages, sessionBoundaries, streaming, user, rules, subject, hintCount, getMemory, updateMemory, subjectId, speak, offlineMode])
 
   // ── Input handlers ────────────────────────────────────────────
 
@@ -345,6 +371,25 @@ export function ChatPage() {
     setShowUpload(false)
   }
 
+  const handleOfflineToggle = async () => {
+    if (!offlineMode && !offlineReady) {
+      setOfflineMode(true)
+      setDownloading(true)
+      setDownloadPct(0)
+      try {
+        await initOfflineModel(pct => setDownloadPct(pct))
+        setOfflineReady(true)
+      } catch (err) {
+        setError('Failed to load offline model: ' + String(err))
+        setOfflineMode(false)
+      } finally {
+        setDownloading(false)
+      }
+    } else {
+      setOfflineMode(m => !m)
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────
 
   return (
@@ -361,8 +406,21 @@ export function ChatPage() {
             <ChevronDown size={14} className="text-slate-400" />
           </button>
           <ScaffoldIndicator hintCount={hintCount} maxScaffoldLevel={rules.max_scaffold_level ?? 3} />
+          {offlineMode && (
+            <span className="text-xs text-emerald-400 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+              <Smartphone size={10} />
+              Offline — running on device
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleOfflineToggle}
+            className={`p-2 rounded-xl transition-all ${offlineMode ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+            title={offlineMode ? 'Switch to online mode' : 'Switch to offline mode'}
+          >
+            {offlineMode ? <Smartphone size={18} /> : <Wifi size={18} />}
+          </button>
           <button
             onClick={() => setVoiceEnabled(v => !v)}
             className={`p-2 rounded-xl transition-all ${voiceEnabled ? 'text-indigo-400 bg-indigo-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
@@ -410,6 +468,20 @@ export function ChatPage() {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Offline model download progress */}
+      {downloading && (
+        <div className="glass-dark border-b border-white/8 px-6 py-4 shrink-0">
+          <p className="text-sm text-slate-300 mb-2">Downloading offline model — this only happens once</p>
+          <div className="w-full bg-white/10 rounded-full h-2">
+            <div
+              className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${downloadPct}%` }}
+            />
+          </div>
+          <p className="text-xs text-slate-500 mt-1">{downloadPct}%</p>
         </div>
       )}
 
