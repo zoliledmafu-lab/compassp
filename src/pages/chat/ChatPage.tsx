@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm'
 import {
   Send, Paperclip, Volume2, VolumeX, RefreshCw,
   Lightbulb, BookOpen, ChevronDown, Mic, MicOff, Clock,
-  Wifi, Smartphone,
+  Wifi, WifiOff,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useRules } from '../../contexts/RulesContext'
@@ -380,7 +380,7 @@ export function ChatPage() {
         await initOfflineModel(pct => setDownloadPct(pct))
         setOfflineReady(true)
       } catch (err) {
-        setError('Failed to load offline model: ' + String(err))
+        setError(String(err).replace(/^Error:\s*/, ''))
         setOfflineMode(false)
       } finally {
         setDownloading(false)
@@ -408,7 +408,7 @@ export function ChatPage() {
           <ScaffoldIndicator hintCount={hintCount} maxScaffoldLevel={rules.max_scaffold_level ?? 3} />
           {offlineMode && (
             <span className="text-xs text-emerald-400 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
-              <Smartphone size={10} />
+              <WifiOff size={10} />
               Offline — running on device
             </span>
           )}
@@ -417,9 +417,9 @@ export function ChatPage() {
           <button
             onClick={handleOfflineToggle}
             className={`p-2 rounded-xl transition-all ${offlineMode ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
-            title={offlineMode ? 'Switch to online mode' : 'Switch to offline mode'}
+            title={offlineMode ? 'Online mode — click to switch' : 'Offline mode — click to download model'}
           >
-            {offlineMode ? <Smartphone size={18} /> : <Wifi size={18} />}
+            {offlineMode ? <WifiOff size={18} /> : <Wifi size={18} />}
           </button>
           <button
             onClick={() => setVoiceEnabled(v => !v)}
@@ -501,10 +501,10 @@ export function ChatPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
               {[
-                `Explain the key concepts in ${subject.name} for NSC`,
-                `I'm stuck on a problem, can you help me think through it?`,
-                `What are common mistakes students make in ${subject.name}?`,
-                `How should I approach exam questions in ${subject.name}?`,
+                `What are the key topics I need to know in ${subject.name} for ${subject.curriculum}?`,
+                `I'm stuck on a ${subject.name} problem — can you guide me through it?`,
+                `What do ZIMSEC examiners look for in ${subject.name} answers?`,
+                `How should I structure my answers in a ${subject.curriculum} ${subject.name} exam?`,
               ].map(prompt => (
                 <button
                   key={prompt}

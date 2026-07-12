@@ -9,6 +9,18 @@ const SYSTEM_PROMPT =
 let engine: MLCEngine | null = null
 
 export async function initOfflineModel(onProgress: (pct: number) => void): Promise<void> {
+  if (!('gpu' in navigator)) {
+    throw new Error('Offline mode needs WebGPU, which this browser does not support. Try Chrome 113+ on a desktop or laptop. Your online mode works perfectly on this device.')
+  }
+  try {
+    const adapter = await (navigator as any).gpu.requestAdapter()
+    if (!adapter) {
+      throw new Error('No compatible GPU found. Offline mode works best on a desktop or laptop with Chrome or Edge. Your online mode is fully available.')
+    }
+  } catch (e: any) {
+    if (e?.message?.startsWith('No compatible')) throw e
+    throw new Error('Could not access the GPU on this device. Offline mode requires a WebGPU-compatible browser. Your online mode is fully available.')
+  }
   engine = await CreateMLCEngine(MODEL_ID, {
     initProgressCallback: (report: InitProgressReport) => {
       onProgress(Math.round(report.progress * 100))
