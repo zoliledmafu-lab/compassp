@@ -16,7 +16,7 @@ import { buildSystemPrompt, detectFrustration, getScaffoldLevel } from '../../li
 import { streamCompletion, extractSessionInsights } from '../../lib/claudeApi'
 import { getSubject, SUBJECTS } from '../../lib/subjects'
 import { getPinnedSubjects, getCurriculumSubjects } from '../../lib/pinnedSubjects'
-import { initOfflineModel, isOfflineReady, askOffline } from '../../lib/offlineAI'
+import { initOfflineModel, isOfflineReady, isRunningOnGPU, askOffline } from '../../lib/offlineAI'
 import { Button } from '../../components/ui/Button'
 import { UploadPanel } from '../../components/chat/UploadPanel'
 import type { Message } from '../../lib/claudeApi'
@@ -409,7 +409,7 @@ export function ChatPage() {
           {offlineMode && (
             <span className="text-xs text-emerald-400 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
               <WifiOff size={10} />
-              Offline — running on device
+              Offline — {isRunningOnGPU() ? 'GPU' : 'on device'}
             </span>
           )}
         </div>

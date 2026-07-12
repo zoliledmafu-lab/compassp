@@ -1,46 +1,75 @@
-import { CreateMLCEngine } from '@mlc-ai/web-llm'
-import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm'
+import { pipeline, env } from '@huggingface/transformers'
 
-const MODEL_ID = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC'
+env.allowLocalModels = false
+
+const MODEL_ID = 'HuggingFaceTB/SmolLM2-360M-Instruct'
 
 const SYSTEM_PROMPT =
   'You are Compass, an AI tutor for Zimbabwean ZIMSEC students. NEVER give a direct answer. Always guide with questions and hints. When the student writes in Shona, reply in BOTH Shona and English — give the Shona explanation first, then the English translation immediately after, so the student learns the concept in their native language while also building their English exam vocabulary. When the student writes in Ndebele, reply in BOTH Ndebele and English — give the Ndebele explanation first, then the English translation immediately after. This is critical because ZIMSEC examinations are written in English and students must be comfortable with English academic vocabulary. Keep total response to 4 sentences maximum. End encouragingly.'
 
-let engine: MLCEngine | null = null
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let generator: any = null
+let runningOnGPU = false
 
 export async function initOfflineModel(onProgress: (pct: number) => void): Promise<void> {
-  if (!('gpu' in navigator)) {
-    throw new Error('Offline mode needs WebGPU, which this browser does not support. Try Chrome 113+ on a desktop or laptop. Your online mode works perfectly on this device.')
-  }
-  try {
-    const adapter = await (navigator as any).gpu.requestAdapter()
-    if (!adapter) {
-      throw new Error('No compatible GPU found. Offline mode works best on a desktop or laptop with Chrome or Edge. Your online mode is fully available.')
+  const progressCallback = (p: any) => {
+    if (p.status === 'progress' && typeof p.progress === 'number') {
+      onProgress(Math.round(p.progress))
     }
-  } catch (e: any) {
-    if (e?.message?.startsWith('No compatible')) throw e
-    throw new Error('Could not access the GPU on this device. Offline mode requires a WebGPU-compatible browser. Your online mode is fully available.')
   }
-  engine = await CreateMLCEngine(MODEL_ID, {
-    initProgressCallback: (report: InitProgressReport) => {
-      onProgress(Math.round(report.progress * 100))
-    },
+
+  // Try WebGPU first — fast on desktop and high-end phones
+  const hasGPU = 'gpu' in navigator
+  if (hasGPU) {
+    try {
+      const adapter = await (navigator as any).gpu.requestAdapter()
+      if (adapter) {
+        generator = await pipeline('text-generation', MODEL_ID, {
+          device: 'webgpu',
+          dtype: 'q4f16',
+          progress_callback: progressCallback,
+        })
+        runningOnGPU = true
+        return
+      }
+    } catch { /* no WebGPU — fall through to WASM */ }
+  }
+
+  // Fall back to WASM/CPU — works on all devices including mobile
+  generator = await pipeline('text-generation', MODEL_ID, {
+    device: 'wasm',
+    dtype: 'q4',
+    progress_callback: progressCallback,
   })
+  runningOnGPU = false
 }
 
 export function isOfflineReady(): boolean {
-  return engine !== null
+  return generator !== null
+}
+
+export function isRunningOnGPU(): boolean {
+  return runningOnGPU
 }
 
 export async function askOffline(message: string, _language: string): Promise<string> {
-  if (!engine) throw new Error('Offline model not loaded')
-  const reply = await engine.chat.completions.create({
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: message },
-    ],
+  if (!generator) throw new Error('Offline model not loaded')
+
+  const messages = [
+    { role: 'system' as const, content: SYSTEM_PROMPT },
+    { role: 'user' as const, content: message },
+  ]
+
+  const result = await generator(messages, {
+    max_new_tokens: 200,
+    do_sample: true,
     temperature: 0.7,
-    max_tokens: 256,
+    return_full_text: false,
   })
-  return reply.choices[0]?.message?.content ?? ''
+
+  const output = result?.[0]?.generated_text
+  if (Array.isArray(output)) {
+    return output.at(-1)?.content ?? ''
+  }
+  return String(output ?? '')
 }
