@@ -5,7 +5,6 @@ import remarkGfm from 'remark-gfm'
 import {
   Send, Paperclip, Volume2, VolumeX, RefreshCw,
   Lightbulb, BookOpen, ChevronDown, Mic, MicOff, Clock,
-  Wifi, WifiOff,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useRules } from '../../contexts/RulesContext'
@@ -407,20 +406,31 @@ export function ChatPage() {
           </button>
           <ScaffoldIndicator hintCount={hintCount} maxScaffoldLevel={rules.max_scaffold_level ?? 3} />
           {offlineMode && (
-            <span className="text-xs text-emerald-400 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
-              <WifiOff size={10} />
+            <span className="text-xs text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
               Offline — running on device
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleOfflineToggle}
-            className={`p-2 rounded-xl transition-all ${offlineMode ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
-            title={offlineMode ? 'Online mode — click to switch' : 'Offline mode — click to download model'}
-          >
-            {offlineMode ? <WifiOff size={18} /> : <Wifi size={18} />}
-          </button>
+          <div className="flex items-center gap-1.5">
+            <span className={`text-xs font-medium transition-colors duration-200 ${!offlineMode ? 'text-indigo-400' : 'text-slate-600'}`}>
+              Online
+            </span>
+            <button
+              onClick={handleOfflineToggle}
+              title={offlineMode ? 'Switch to online mode' : 'Switch to offline mode'}
+              className={`relative w-10 h-5 rounded-full transition-colors duration-300 focus:outline-none ${
+                offlineMode ? 'bg-emerald-500' : 'bg-indigo-500'
+              }`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 ${
+                offlineMode ? 'translate-x-5' : 'translate-x-0'
+              }`} />
+            </button>
+            <span className={`text-xs font-medium transition-colors duration-200 ${offlineMode ? 'text-emerald-400' : 'text-slate-600'}`}>
+              Offline
+            </span>
+          </div>
           <button
             onClick={() => setVoiceEnabled(v => !v)}
             className={`p-2 rounded-xl transition-all ${voiceEnabled ? 'text-indigo-400 bg-indigo-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
