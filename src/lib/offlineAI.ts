@@ -1,4 +1,15 @@
-import { pipeline, env } from '@huggingface/transformers'
+// Dynamically imported so the ONNX runtime is not bundled into the initial page load.
+// It only downloads when the user activates offline mode.
+let _pipeline: any = null
+let _env: any = null
+
+async function loadTransformers() {
+  if (!_pipeline) {
+    const mod = await import('@huggingface/transformers')
+    _pipeline = mod.pipeline
+    _env = mod.env
+  }
+}
 
 const MODEL_ID = 'HuggingFaceTB/SmolLM2-360M-Instruct'
 
@@ -43,11 +54,12 @@ export async function initOfflineModel(onProgress: (percentage: number) => void)
     return
   }
 
-  env.allowLocalModels = false
-  env.useBrowserCache = true
+  await loadTransformers()
+  _env.allowLocalModels = false
+  _env.useBrowserCache = true
 
   try {
-    generator = await pipeline('text-generation', MODEL_ID, {
+    generator = await _pipeline('text-generation', MODEL_ID, {
       progress_callback: (progress: any) => {
         if (progress?.status === 'downloading' && progress?.progress != null) {
           onProgress(Math.min(Math.round(progress.progress * 100), 99))
