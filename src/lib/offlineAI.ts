@@ -1,75 +1,126 @@
 import { pipeline, env } from '@huggingface/transformers'
 
-env.allowLocalModels = false
-
 const MODEL_ID = 'HuggingFaceTB/SmolLM2-360M-Instruct'
 
-const SYSTEM_PROMPT =
-  'You are Compass, an AI tutor for Zimbabwean ZIMSEC students. NEVER give a direct answer. Always guide with questions and hints. When the student writes in Shona, reply in BOTH Shona and English — give the Shona explanation first, then the English translation immediately after, so the student learns the concept in their native language while also building their English exam vocabulary. When the student writes in Ndebele, reply in BOTH Ndebele and English — give the Ndebele explanation first, then the English translation immediately after. This is critical because ZIMSEC examinations are written in English and students must be comfortable with English academic vocabulary. Keep total response to 4 sentences maximum. End encouragingly.'
+const GENERATION_CONFIG = {
+  max_new_tokens: 120,
+  temperature: 0.1,
+  do_sample: false,
+  repetition_penalty: 1.3,
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SYSTEM_PROMPT = `You are Compass, a tutor for Zimbabwean ZIMSEC students.
+RULES:
+1. NEVER give the full answer. Give ONE guiding hint only.
+2. Keep response under 3 sentences.
+3. If student writes in Shona: reply in Shona first, then English translation.
+4. If student writes in Ndebele: reply in Ndebele first, then English translation.
+5. If student writes in English: reply in English only.
+6. End with one encouraging sentence.
+
+EXAMPLES:
+Student: What is photosynthesis?
+Tutor: Think about what plants need to survive. What role does sunlight play in helping them make food? You are thinking well — keep going!
+
+Student: Ndinoda kubatsirwa pa equation ye circle. (x-1)² + y² = 25
+Tutor: Tarisa nhamba iri mukati mebrackets — inoratidza centre yecircle. (Look at the number inside the brackets — it shows the centre of the circle.) You are on the right track!
+
+Student: I-probability ibalwa njani?
+Tutor: Cabanga ngamathuba okwenzeka kwento. (Think about the chances of something happening.) Ungabala amathuba alungileyo phakathi kwawo wonke? Good thinking — try it!
+
+Student: How do I find the gradient of a line?
+Tutor: Think about rise over run — how much does y change compared to x? Can you identify two points on your line? Keep going, you are close!
+
+Student: What causes soil erosion in Zimbabwe?
+Tutor: Think about what happens to bare soil when heavy rain falls. What is missing that would normally hold the soil in place? Excellent question — you are thinking like a geographer!`
+
 let generator: any = null
-let runningOnGPU = false
+let modelReady = false
 
-export async function initOfflineModel(onProgress: (pct: number) => void): Promise<void> {
-  const progressCallback = (p: any) => {
-    if (p.status === 'progress' && typeof p.progress === 'number') {
-      onProgress(Math.round(p.progress))
-    }
+export async function initOfflineModel(onProgress: (percentage: number) => void): Promise<void> {
+  if (modelReady) {
+    onProgress(100)
+    return
   }
 
-  // Try WebGPU first — fast on desktop and high-end phones
-  const hasGPU = 'gpu' in navigator
-  if (hasGPU) {
-    try {
-      const adapter = await (navigator as any).gpu.requestAdapter()
-      if (adapter) {
-        generator = await pipeline('text-generation', MODEL_ID, {
-          device: 'webgpu',
-          dtype: 'q4f16',
-          progress_callback: progressCallback,
-        })
-        runningOnGPU = true
-        return
-      }
-    } catch { /* no WebGPU — fall through to WASM */ }
-  }
+  env.allowLocalModels = false
+  env.useBrowserCache = true
 
-  // Fall back to WASM/CPU — works on all devices including mobile
-  generator = await pipeline('text-generation', MODEL_ID, {
-    device: 'wasm',
-    dtype: 'q4',
-    progress_callback: progressCallback,
-  })
-  runningOnGPU = false
+  try {
+    generator = await pipeline('text-generation', MODEL_ID, {
+      progress_callback: (progress: any) => {
+        if (progress?.status === 'downloading' && progress?.progress != null) {
+          onProgress(Math.min(Math.round(progress.progress * 100), 99))
+        }
+        if (progress?.status === 'done') {
+          onProgress(100)
+        }
+      },
+    })
+    modelReady = true
+    onProgress(100)
+  } catch (error) {
+    console.error('[offlineAI] Model load failed:', error)
+    throw new Error('Failed to load offline model. Please check your connection and try again.')
+  }
 }
 
 export function isOfflineReady(): boolean {
-  return generator !== null
+  return modelReady
 }
 
-export function isRunningOnGPU(): boolean {
-  return runningOnGPU
+export async function askOffline(
+  message: string,
+  language: 'shona' | 'ndebele' | 'english' = 'english'
+): Promise<string> {
+  if (!modelReady || !generator) {
+    throw new Error('Offline model is not ready. Call initOfflineModel first.')
+  }
+
+  const languageHint =
+    language === 'shona'
+      ? '\n[Student is writing in Shona. Reply in Shona first, then English.]'
+      : language === 'ndebele'
+      ? '\n[Student is writing in Ndebele. Reply in Ndebele first, then English.]'
+      : ''
+
+  const prompt = `${SYSTEM_PROMPT}${languageHint}
+
+Student: ${message}
+Tutor:`
+
+  try {
+    const result = await generator(prompt, {
+      ...GENERATION_CONFIG,
+      return_full_text: false,
+    })
+
+    const raw: string = result?.[0]?.generated_text ?? ''
+    const cleaned = raw.split('Student:')[0].split('\nStudent')[0].trim()
+    return cleaned || 'Let me think about that with you. Can you tell me what you already know about this topic?'
+  } catch (error) {
+    console.error('[offlineAI] Inference error:', error)
+    return 'I had trouble processing that. Could you rephrase your question? I am here to help!'
+  }
 }
 
-export async function askOffline(message: string, _language: string): Promise<string> {
-  if (!generator) throw new Error('Offline model not loaded')
+export function detectLanguage(message: string): 'shona' | 'ndebele' | 'english' {
+  const lower = message.toLowerCase()
 
-  const messages = [
-    { role: 'system' as const, content: SYSTEM_PROMPT },
-    { role: 'user' as const, content: message },
+  const shonaWords = [
+    'ndinoda', 'ndiri', 'inorevei', 'kubatsirwa', 'mhoro', 'zvakanaka',
+    'unofunga', 'inoita', 'muenzaniso', 'ndeipi', 'sei',
+    'kana', 'zvino', 'pane', 'chikafu', 'mvura', 'mwenje',
+  ]
+  const ndebeleWords = [
+    'sawubona', 'ngisiza', 'ibalwa', 'njani', 'yini', 'ungangitshela',
+    'cabanga', 'bheka', 'wenzile', 'ngiyabonga', 'ulama', 'sicela',
+    'umbuzo', 'impendulo', 'isifundo', 'amanzi',
   ]
 
-  const result = await generator(messages, {
-    max_new_tokens: 200,
-    do_sample: true,
-    temperature: 0.7,
-    return_full_text: false,
-  })
+  const shonaScore = shonaWords.filter(w => lower.includes(w)).length
+  const ndebeleScore = ndebeleWords.filter(w => lower.includes(w)).length
 
-  const output = result?.[0]?.generated_text
-  if (Array.isArray(output)) {
-    return output.at(-1)?.content ?? ''
-  }
-  return String(output ?? '')
+  if (shonaScore === 0 && ndebeleScore === 0) return 'english'
+  return shonaScore >= ndebeleScore ? 'shona' : 'ndebele'
 }
