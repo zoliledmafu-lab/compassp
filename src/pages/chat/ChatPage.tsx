@@ -141,6 +141,19 @@ export function ChatPage() {
     }
   }, [downloadPct, downloading])
 
+  // Auto-switch to offline when connection is lost (if model already downloaded),
+  // and back to online when connection is restored
+  useEffect(() => {
+    const goOffline = () => { if (isOfflineReady()) setOfflineMode(true) }
+    const goOnline  = () => setOfflineMode(false)
+    window.addEventListener('offline', goOffline)
+    window.addEventListener('online',  goOnline)
+    return () => {
+      window.removeEventListener('offline', goOffline)
+      window.removeEventListener('online',  goOnline)
+    }
+  }, [])
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const recognitionRef = useRef<any>(null)
@@ -260,7 +273,12 @@ export function ChatPage() {
 
     if (offlineMode && isOfflineReady()) {
       try {
-        const reply = await askOffline(content, detectLanguage(content))
+        const reply = await askOffline(
+          content,
+          detectLanguage(content),
+          subject.name,
+          messages
+        )
         const assistantMsg: Message = { role: 'assistant', content: reply }
         const final = [...newMessages, assistantMsg]
         setMessages(final)

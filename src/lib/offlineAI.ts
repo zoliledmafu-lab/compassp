@@ -1,5 +1,4 @@
 // Dynamically imported so the ONNX runtime is not bundled into the initial page load.
-// It only downloads when the user activates offline mode.
 let _pipeline: any = null
 let _env: any = null
 
@@ -14,7 +13,7 @@ async function loadTransformers() {
 const MODEL_ID = 'HuggingFaceTB/SmolLM2-360M-Instruct'
 
 const GENERATION_CONFIG = {
-  max_new_tokens: 120,
+  max_new_tokens: 150,
   temperature: 0.1,
   do_sample: false,
   repetition_penalty: 1.3,
@@ -28,6 +27,7 @@ RULES:
 4. If student writes in Ndebele: reply in Ndebele first, then English translation.
 5. If student writes in English: reply in English only.
 6. End with one encouraging sentence.
+7. Always relate your hint to the specific subject and topic the student is studying.
 
 EXAMPLES:
 Student: What is photosynthesis?
@@ -54,6 +54,12 @@ export async function initOfflineModel(onProgress: (percentage: number) => void)
     return
   }
 
+  if (!navigator.onLine) {
+    throw new Error(
+      'The offline model needs a one-time download (230 MB). You are currently offline — connect to WiFi or data, download the model once, and after that Compass works with no internet at all.'
+    )
+  }
+
   await loadTransformers()
   _env.allowLocalModels = false
   _env.useBrowserCache = true
@@ -73,7 +79,7 @@ export async function initOfflineModel(onProgress: (percentage: number) => void)
     onProgress(100)
   } catch (error) {
     console.error('[offlineAI] Model load failed:', error)
-    throw new Error('Failed to load offline model. Please check your connection and try again.')
+    throw new Error('Download failed. Please check your connection and try again.')
   }
 }
 
@@ -83,7 +89,9 @@ export function isOfflineReady(): boolean {
 
 export async function askOffline(
   message: string,
-  language: 'shona' | 'ndebele' | 'english' = 'english'
+  language: 'shona' | 'ndebele' | 'english' = 'english',
+  subjectName?: string,
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<string> {
   if (!modelReady || !generator) {
     throw new Error('Offline model is not ready. Call initOfflineModel first.')
@@ -96,9 +104,18 @@ export async function askOffline(
       ? '\n[Student is writing in Ndebele. Reply in Ndebele first, then English.]'
       : ''
 
+  const subjectLine = subjectName ? `[Subject: ${subjectName}]\n` : ''
+
+  // Include last 3 exchanges so the model has conversational context
+  const historyText = history && history.length > 0
+    ? history.slice(-6).map(m =>
+        `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content}`
+      ).join('\n') + '\n'
+    : ''
+
   const prompt = `${SYSTEM_PROMPT}${languageHint}
 
-Student: ${message}
+${subjectLine}${historyText}Student: ${message}
 Tutor:`
 
   try {
