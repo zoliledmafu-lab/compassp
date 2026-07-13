@@ -133,6 +133,14 @@ export function ChatPage() {
   const [downloading, setDownloading] = useState(false)
   const [downloadPct, setDownloadPct] = useState(0)
 
+  // Auto-dismiss the download bar 1.2s after it hits 100%
+  useEffect(() => {
+    if (downloadPct >= 100 && downloading) {
+      const t = setTimeout(() => setDownloading(false), 1200)
+      return () => clearTimeout(t)
+    }
+  }, [downloadPct, downloading])
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const recognitionRef = useRef<any>(null)
@@ -484,14 +492,20 @@ export function ChatPage() {
       {/* Offline model download progress */}
       {downloading && (
         <div className="glass-dark border-b border-white/8 px-6 py-4 shrink-0">
-          <p className="text-sm text-slate-300 mb-2">Downloading offline model — this only happens once</p>
-          <div className="w-full bg-white/10 rounded-full h-2">
-            <div
-              className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${downloadPct}%` }}
-            />
-          </div>
-          <p className="text-xs text-slate-500 mt-1">{downloadPct}%</p>
+          {downloadPct < 100 ? (
+            <>
+              <p className="text-sm text-slate-300 mb-2">Downloading offline model — this only happens once</p>
+              <div className="w-full bg-white/10 rounded-full h-2">
+                <div
+                  className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${downloadPct}%` }}
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-1">{downloadPct}%</p>
+            </>
+          ) : (
+            <p className="text-sm text-emerald-400 font-medium">✓ Model ready — switching to offline mode</p>
+          )}
         </div>
       )}
 
