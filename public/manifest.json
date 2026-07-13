@@ -1,0 +1,17 @@
+{
+  "name": "Compass — ZIMSEC Study Companion",
+  "short_name": "Compass",
+  "description": "AI-powered tutoring for Zimbabwean ZIMSEC students",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a14",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
