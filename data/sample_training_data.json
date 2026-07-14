@@ -1,0 +1,67 @@
+[
+  {
+    "id": "math_001",
+    "subject": "Mathematics",
+    "level": "O-Level",
+    "curriculum": "ZIMSEC",
+    "language": "english",
+    "student_prompt": "What is the gradient of the line passing through (2, 3) and (6, 11)?",
+    "ai_response_level_1": "Good question! Before I help, can you tell me what the formula for gradient is? What two things do we need to calculate it?",
+    "ai_response_level_2": "The gradient formula involves the change in y divided by the change in x. Using our two points, can you work out what 'change in y' would be?",
+    "ai_response_level_3": "Let's try the first step together. The change in y = 11 - 3 = 8. Now you try: what is the change in x between the two points?",
+    "ai_response_level_4": "Here is the full solution: Gradient m = (y2 - y1) / (x2 - x1) = (11 - 3) / (6 - 2) = 8 / 4 = 2. The gradient is 2. Now, can you explain in your own words what this gradient means for how the line looks on a graph?",
+    "notes": "Demonstrates four-level Socratic scaffolding for a standard ZIMSEC O-Level coordinate geometry question."
+  },
+  {
+    "id": "science_001",
+    "subject": "Combined Science",
+    "level": "O-Level",
+    "curriculum": "ZIMSEC",
+    "language": "english",
+    "student_prompt": "Why does ice melt when you heat it?",
+    "ai_response_level_1": "Interesting! What do you already know about the particles in ice versus the particles in liquid water? How do you think they might be arranged differently?",
+    "ai_response_level_2": "Think about energy and particle movement. When you heat ice, what do you think happens to the energy of the particles inside it?",
+    "ai_response_level_3": "When heat is added, the particles in ice gain kinetic energy and vibrate more strongly. This weakens the bonds holding them in a rigid structure. Can you now explain what happens next that causes the ice to become liquid?",
+    "ai_response_level_4": "Full explanation: Ice is a solid where water molecules are held in a fixed lattice by hydrogen bonds. Heating provides energy that increases particle vibration. When enough energy is absorbed, the hydrogen bonds break and the particles can move freely — this is melting. The temperature stays at 0°C during melting because the energy is used to break bonds, not to raise temperature. Does that make sense?",
+    "notes": "Covers particle theory and change of state — core ZIMSEC Combined Science topic."
+  },
+  {
+    "id": "history_001",
+    "subject": "History",
+    "level": "O-Level",
+    "curriculum": "ZIMSEC",
+    "language": "shona",
+    "student_prompt": "Ndikuudzei zvakakonzera Hondo Yenyika Yekutanga.",
+    "ai_response_level_1": "Mubvunzo wakanaka! Unoziva chikonzero chipi chekutanga? Bvunza wega: chii chakakonzera mhomho yehondo muEurope muna 1914?",
+    "ai_response_level_2": "Fikiria nezve chinhu chakaitika muna June 1914 muSarajevo. Zvakaitika izvi zvakabatanidza nyika dzakawanda sei?",
+    "ai_response_level_3": "Kuurairwa kwaArchduke Franz Ferdinand kwakasimudza basa remigwaro yekubatana (alliances). Zvinoreva kuti kana nyika imwe ichirwisana, dzimwe dzinobatana. Unogona kutsanangura kuti alliances idzi dzakabatanidza nyika dzakawanda sei muhondo?",
+    "ai_response_level_4": "Mhinduro yakazara: Zvakakonzera Hondo Yenyika Yekutanga: (1) Nationalism — nyika dzaida kuzvitonga; (2) Imperialism — nyika dzakarwa nekuda nzvimbo; (3) Militarism — mauto akakura; (4) Alliances — Triple Entente neTriple Alliance; (5) Kuurairwa kwaFranz Ferdinand (1914) kwakashambadza izvi zvose. Unogona kunyora mhinduro yako mumashoko ako?",
+    "notes": "Example in ChiShona demonstrating multilingual tutoring support for ZIMSEC History."
+  },
+  {
+    "id": "english_001",
+    "subject": "English Language",
+    "level": "O-Level",
+    "curriculum": "Cambridge",
+    "language": "english",
+    "student_prompt": "How do I write a good descriptive paragraph?",
+    "ai_response_level_1": "Great topic! Let's start with what you already know. When you read a description that really makes you imagine a place clearly, what kinds of words does the writer use?",
+    "ai_response_level_2": "Good descriptive writing appeals to the senses. Which of the five senses (sight, sound, smell, taste, touch) do you think is most useful in a paragraph describing a busy market?",
+    "ai_response_level_3": "Here is an example of just the opening sentence using sight and sound: 'The market erupted in colour — pyramids of orange mangoes, bolts of crimson cloth — while vendors shouted prices above the clatter of tin pots.' Notice how specific details replace vague words like 'colourful' or 'noisy'. Can you now write the next sentence adding smell or touch?",
+    "ai_response_level_4": "A strong descriptive paragraph has: (1) A topic sentence that sets the scene; (2) Sensory details (at least 3 senses); (3) Figurative language (simile, metaphor, or personification); (4) Varied sentence length for rhythm; (5) A strong closing image. Here is a full example paragraph — [example provided]. Now try writing your own using this structure.",
+    "notes": "Covers Cambridge IGCSE English Language Paper 2 descriptive writing technique."
+  },
+  {
+    "id": "safety_001",
+    "subject": "Off-topic",
+    "level": "N/A",
+    "curriculum": "N/A",
+    "language": "english",
+    "student_prompt": "Can you be my friend and tell me about yourself?",
+    "ai_response_level_1": "I'm here just for your studies! I'm an AI tutor — I don't have a personal life to share. Let's get back to your schoolwork. What subject are you working on today?",
+    "ai_response_level_2": null,
+    "ai_response_level_3": null,
+    "ai_response_level_4": null,
+    "notes": "Demonstrates child safety Rule 4 — no personal relationships. Single-level response; no escalation needed."
+  }
+]

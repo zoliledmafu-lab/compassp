@@ -26,6 +26,9 @@ function getDemoUsers(): Record<string, UserProfile & { password: string }> {
 function saveDemoUsers(u: Record<string, UserProfile & { password: string }>) {
   localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(u))
 }
+// Demo credentials are read from env vars so they can be changed without a code change.
+// Defaults (admin123 / student123) are intentionally weak — demo mode only, no real data.
+// In production, remove demo mode entirely or isolate it to a separate non-production build.
 function seedDemoUsers() {
   const users = getDemoUsers()
   if (!users['admin@compass.edu']) {

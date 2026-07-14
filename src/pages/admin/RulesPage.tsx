@@ -1,9 +1,14 @@
 import { Settings, ToggleLeft, ToggleRight, Sliders, Layers, Heart, Star } from 'lucide-react'
+import { Navigate } from 'react-router-dom'
 import { useRules } from '../../contexts/RulesContext'
+import { useAuth } from '../../contexts/AuthContext'
 import { Card } from '../../components/ui/Card'
 
 export function RulesPage() {
+  const { user } = useAuth()
   const { rules, updateRules } = useRules()
+
+  if (!user || user.role !== 'admin') return <Navigate to="/dashboard" replace />
 
   const toggles = [
     { key: 'no_direct_answers' as const, label: 'Never give direct answers', desc: 'Compass guides students to answers rather than stating them outright.' },

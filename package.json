@@ -1,7 +1,8 @@
 {
   "name": "compass-prototype",
+  "description": "AI-powered Socratic tutor for Zimbabwean secondary school students — ZIMSEC & Cambridge curricula, multilingual (English/Shona/Ndebele), offline-capable.",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

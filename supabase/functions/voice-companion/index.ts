@@ -232,6 +232,20 @@ Deno.serve(async (req) => {
     'Content-Type': 'application/json',
   }
 
+  // Validate JWT — reject unauthenticated requests before any processing
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Missing or invalid Authorization header.' }), { headers: corsHeaders, status: 401 })
+  }
+  const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+  const anonClient = createClient(SUPABASE_URL, ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  })
+  const { data: { user: authUser }, error: authError } = await anonClient.auth.getUser()
+  if (authError || !authUser) {
+    return new Response(JSON.stringify({ error: 'Unauthorized — invalid or expired token.' }), { headers: corsHeaders, status: 401 })
+  }
+
   try {
     const { screenshot_base64, transcript, student_id, mode, app_detected, voice_gender, subject_id } =
       await req.json() as {

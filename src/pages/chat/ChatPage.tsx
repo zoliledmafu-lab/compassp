@@ -12,7 +12,7 @@ import { useMemory } from '../../contexts/MemoryContext'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { supabase, SUPABASE_ENABLED } from '../../lib/supabase'
 import { buildSystemPrompt, detectFrustration, getScaffoldLevel } from '../../lib/ruleEngine'
-import { streamCompletion, extractSessionInsights } from '../../lib/claudeApi'
+import { streamCompletion, extractSessionInsights, isSafeInput } from '../../lib/claudeApi'
 import { getSubject, SUBJECTS } from '../../lib/subjects'
 import { getPinnedSubjects, getCurriculumSubjects } from '../../lib/pinnedSubjects'
 import { initOfflineModel, isOfflineReady, askOffline, detectLanguage } from '../../lib/offlineAI'
@@ -252,6 +252,10 @@ export function ChatPage() {
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || streaming || !user) return
     setError('')
+    if (!isSafeInput(content)) {
+      setError("I can only help with your school subjects. Let's focus on your studies!")
+      return
+    }
 
     // Detect frustration before updating state so we can pass it to the prompt synchronously
     const isFrustrated = detectFrustration(content, recentUserMsgsRef.current)

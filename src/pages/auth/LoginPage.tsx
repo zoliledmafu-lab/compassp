@@ -55,7 +55,9 @@ export function LoginPage() {
 
   const fillDemo = (role: 'student' | 'admin') => {
     setEmail(role === 'admin' ? 'admin@compass.edu' : 'student@compass.edu')
-    setPassword(role === 'admin' ? 'admin123' : 'student123')
+    const adminPw = import.meta.env.VITE_DEMO_ADMIN_PASSWORD || 'admin123'
+    const studentPw = import.meta.env.VITE_DEMO_STUDENT_PASSWORD || 'student123'
+    setPassword(role === 'admin' ? adminPw : studentPw)
     setError('')
   }
 

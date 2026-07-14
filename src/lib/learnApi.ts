@@ -160,6 +160,7 @@ Respond ONLY with valid JSON (no markdown):
         'x-api-key': ANTHROPIC_KEY,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
+        // PROTOTYPE ONLY — move to a server-side Edge Function before production (see KNOWN_LIMITATIONS.md #1)
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
@@ -211,6 +212,7 @@ Respond ONLY with valid JSON: {"text":"...","annotations":[]}`
         'x-api-key': ANTHROPIC_KEY,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
+        // PROTOTYPE ONLY — move to a server-side Edge Function before production (see KNOWN_LIMITATIONS.md #1)
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({

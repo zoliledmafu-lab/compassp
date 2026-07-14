@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { BarChart3, TrendingUp, Users, MessageSquare, AlertTriangle } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { useAuth } from '../../contexts/AuthContext'
@@ -27,6 +28,8 @@ export function AnalyticsPage() {
     if (!user || user.role !== 'admin') return
     loadStats()
   }, [user]) // eslint-disable-line
+
+  if (!user || user.role !== 'admin') return <Navigate to="/dashboard" replace />
 
   async function loadStats() {
     setLoading(true)

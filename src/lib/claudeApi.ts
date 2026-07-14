@@ -5,6 +5,37 @@ export interface Message {
 
 const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || ''
 
+// ─── Child safety: input screening ───────────────────────────────────────────
+// Called before any AI request. Returns true when the input is safe to send.
+
+const UNSAFE_INPUT_PATTERNS = [
+  /\b(porn|sex(ual)?|naked|nude|explicit|xxx|adult content|erotic)\b/i,
+  /\b(how to (kill|hurt|harm|attack|murder|stab|shoot)|make (a bomb|a weapon|explosives))\b/i,
+  /\b(where do you live|how old are you|are you alone|meet (me|up)|send (me|a) (photo|pic)|personal (number|address|details))\b/i,
+  /\b(how to (suicide|self.harm|cut myself|overdose)|ways to (die|kill myself))\b/i,
+]
+
+export function isSafeInput(message: string): boolean {
+  return !UNSAFE_INPUT_PATTERNS.some(p => p.test(message))
+}
+
+// ─── Child safety: output screening ──────────────────────────────────────────
+// Checks an accumulated AI response before delivering to the student.
+// Returns true when the response is safe to display.
+
+const UNSAFE_OUTPUT_PATTERNS = [
+  /\b(where do you live|how old are you|are you alone|send (me|a) (photo|pic))\b/i,
+  /\b(porn|explicit sexual|nude|naked)\b/i,
+  /\b(you should (hurt|harm|kill)|it('s| is) okay to (hurt|harm))\b/i,
+]
+
+const SAFE_REDIRECT =
+  "I can only help with your school subjects. Let's get back to your studies — what topic are you working on?"
+
+export function isResponseSafe(text: string): boolean {
+  return !UNSAFE_OUTPUT_PATTERNS.some(p => p.test(text))
+}
+
 export async function streamCompletion(
   systemPrompt: string,
   messages: Message[],
@@ -39,6 +70,7 @@ export async function streamCompletion(
         'Content-Type': 'application/json',
         'x-api-key': API_KEY,
         'anthropic-version': '2023-06-01',
+        // PROTOTYPE ONLY — move to a server-side Edge Function before production (see KNOWN_LIMITATIONS.md #1)
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
@@ -60,6 +92,9 @@ export async function streamCompletion(
     if (!reader) { onError('We couldn\'t reach Compass at the moment. Please try again.'); return }
 
     let buffer = ''
+    let accumulated = ''
+    const chunks: string[] = []
+
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
@@ -73,7 +108,8 @@ export async function streamCompletion(
           try {
             const parsed = JSON.parse(data)
             if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
-              onChunk(parsed.delta.text)
+              chunks.push(parsed.delta.text)
+              accumulated += parsed.delta.text
             }
           } catch {
             // skip malformed SSE lines
@@ -81,6 +117,16 @@ export async function streamCompletion(
         }
       }
     }
+
+    // Screen the full accumulated response before delivering to the student.
+    if (!isResponseSafe(accumulated)) {
+      onChunk(SAFE_REDIRECT)
+      onDone()
+      return
+    }
+
+    // Safe — stream all chunks to the UI.
+    for (const chunk of chunks) onChunk(chunk)
     onDone()
   } catch {
     onError('We couldn\'t reach Compass at the moment. Please check your connection and try again.')
@@ -144,6 +190,7 @@ export async function generateQuizQuestions(
         'Content-Type': 'application/json',
         'x-api-key': API_KEY,
         'anthropic-version': '2023-06-01',
+        // PROTOTYPE ONLY — move to a server-side Edge Function before production (see KNOWN_LIMITATIONS.md #1)
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
@@ -232,6 +279,7 @@ export async function summariseBranch(messages: Message[]): Promise<string> {
         'Content-Type': 'application/json',
         'x-api-key': API_KEY,
         'anthropic-version': '2023-06-01',
+        // PROTOTYPE ONLY — move to a server-side Edge Function before production (see KNOWN_LIMITATIONS.md #1)
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
@@ -282,6 +330,7 @@ export async function extractSessionInsights(
         'Content-Type': 'application/json',
         'x-api-key': API_KEY,
         'anthropic-version': '2023-06-01',
+        // PROTOTYPE ONLY — move to a server-side Edge Function before production (see KNOWN_LIMITATIONS.md #1)
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({

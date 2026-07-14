@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
 import { Users, Search } from 'lucide-react'
 import { Input } from '../../components/ui/Input'
 import { useAuth } from '../../contexts/AuthContext'
@@ -35,6 +36,8 @@ export function StudentsPage() {
   const [students, setStudents] = useState<StudentRow[]>([])
   const [loading,  setLoading]  = useState(true)
   const [query,    setQuery]    = useState('')
+
+  if (!user || user.role !== 'admin') return <Navigate to="/dashboard" replace />
 
   useEffect(() => {
     if (!user || user.role !== 'admin') return
