@@ -8,7 +8,7 @@ import '@xyflow/react/dist/style.css'
 import { v4 as uuid } from 'uuid'
 import {
   Plus, Image, Sparkles, Clock, List,
-  ChevronRight, BarChart2, ZoomIn, ZoomOut, Maximize2
+  ChevronRight, BarChart2, ZoomIn, ZoomOut, Maximize2, Map
 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 
@@ -28,6 +28,122 @@ import { SUBJECTS } from '../../lib/subjects'
 import { getAllPlugins, getPluginsForSubject } from '../../widgets/registry'
 import { getPinnedSubjects } from '../../lib/pinnedSubjects'
 import { DEFAULT_WIDGET_NODE_DATA } from '../../widgets/types'
+import { getWidgetIcon } from '../../widgets/icons'
+
+const CANVAS_GUIDE_KEY = 'compass_canvas_tour_v2'
+
+const CANVAS_TOUR_STEPS = [
+  {
+    title: 'Create your first study note',
+    target: '[data-tour="text-btn"]',
+    description: 'Notes are where you write summaries, concepts, formulas, and revision points. Select Text to add your first note to the canvas.',
+  },
+  {
+    title: 'Organise your ideas',
+    target: null as string | null,
+    description: 'Drag any note to move it around the canvas. Arrange related topics together and connect nodes by dragging from one handle to another.',
+  },
+  {
+    title: 'Add learning widgets',
+    target: '[data-tour="widget-btn"]',
+    description: 'Widgets are interactive tools — coordinate planes, graphs, timelines, and more. Select Widget to add one for your current subject.',
+  },
+  {
+    title: 'Test your understanding',
+    target: '[data-tour="quiz-btns"]',
+    description: 'Quiz Me generates practice questions from your canvas notes. Exam mode simulates past paper conditions for structured revision.',
+  },
+  {
+    title: 'Select your subject',
+    target: '[data-tour="subject-btn"]',
+    description: 'Switch between your subjects here. Each subject unlocks a different set of compatible learning widgets.',
+  },
+  {
+    title: 'Navigate the canvas',
+    target: '[data-tour="zoom-btns"]',
+    description: 'Zoom in and out to explore your study space. Use fit-to-view to see all your notes at once as your canvas grows.',
+  },
+]
+
+const TOUR_PAD = 10
+
+function CanvasTour({ onDismiss }: { onDismiss: () => void }) {
+  const [stepIdx, setStepIdx] = useState(0)
+  const [spotRect, setSpotRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
+
+  const step = CANVAS_TOUR_STEPS[stepIdx]
+  const total = CANVAS_TOUR_STEPS.length
+  const isLast = stepIdx === total - 1
+
+  useEffect(() => {
+    if (!step.target) { setSpotRect(null); return }
+    const el = document.querySelector(step.target)
+    if (!el) { setSpotRect(null); return }
+    const r = el.getBoundingClientRect()
+    setSpotRect({ top: r.top, left: r.left, width: r.width, height: r.height })
+  }, [stepIdx]) // eslint-disable-line
+
+  return (
+    <div className="fixed inset-0 z-50">
+      {spotRect ? (
+        <div
+          style={{
+            position: 'absolute',
+            top: spotRect.top - TOUR_PAD,
+            left: spotRect.left - TOUR_PAD,
+            width: spotRect.width + TOUR_PAD * 2,
+            height: spotRect.height + TOUR_PAD * 2,
+            borderRadius: 14,
+            boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
+            border: '2px solid rgba(99,102,241,0.85)',
+            outline: '3px solid rgba(99,102,241,0.2)',
+            outlineOffset: 3,
+            pointerEvents: 'none',
+            transition: 'top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease',
+          }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+      )}
+
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-sm px-4">
+        <div className="glass-dark rounded-2xl border border-white/10 p-5 shadow-2xl">
+          <div className="flex gap-1 mb-4">
+            {CANVAS_TOUR_STEPS.map((_, i) => (
+              <div
+                key={i}
+                className="h-0.5 rounded-full transition-all duration-300 flex-1"
+                style={{
+                  background: i < stepIdx
+                    ? 'rgba(99,102,241,0.45)'
+                    : i === stepIdx
+                    ? 'linear-gradient(90deg, #4f46e5, #7c3aed)'
+                    : 'rgba(255,255,255,0.1)',
+                }}
+              />
+            ))}
+          </div>
+          <div className="flex items-baseline justify-between mb-1">
+            <h3 className="text-sm font-bold text-white">{step.title}</h3>
+            <span className="text-xs text-slate-500 shrink-0 ml-2">{stepIdx + 1} / {total}</span>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed mb-4">{step.description}</p>
+          <div className="flex items-center justify-between">
+            <button onClick={onDismiss} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Skip tour
+            </button>
+            <button
+              onClick={() => isLast ? onDismiss() : setStepIdx(i => i + 1)}
+              className="px-4 py-2 gradient-primary rounded-xl text-xs font-semibold text-white"
+            >
+              {isLast ? 'Get started' : 'Next →'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // Register custom node types OUTSIDE component to avoid re-mount
 const NODE_TYPES: NodeTypes = {
@@ -53,6 +169,24 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
   const [panelMode, setPanelMode] = useState<PanelMode>('none')
   const [activeBranchId, setActiveBranchId] = useState<string | null>(null)
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
+  const widgetRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!localStorage.getItem(CANVAS_GUIDE_KEY)) setShowGuide(true)
+  }, [])
+
+  // Close widget menu on outside click (Task 2)
+  useEffect(() => {
+    if (!widgetMenuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (widgetRef.current && !widgetRef.current.contains(e.target as Node)) {
+        setWidgetMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [widgetMenuOpen])
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -191,10 +325,12 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
     if (!plugin) return
     const id = uuid()
     const pos = centrePosition()
+    const isMobile = window.innerWidth < 768
     const newNode: CanvasRFNode = {
       id,
       type: 'widget',
       position: pos,
+      style: { width: isMobile ? Math.min(320, window.innerWidth - 48) : 420 },
       data: {
         widgetId,
         widgetState: plugin.defaultState,
@@ -298,10 +434,10 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
         <div className="flex-1 relative">
           {/* Toolbar */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 glass-dark rounded-2xl px-3 py-2 shadow-xl">
-            <ToolBtn icon={<Plus size={16} />} label="Text" onClick={addTextNode} color="indigo" />
+            <ToolBtn icon={<Plus size={16} />} label="Text" onClick={addTextNode} color="indigo" tourId="text-btn" />
             <ToolBtn icon={<Image size={16} />} label="Image" onClick={() => addImageNode()} color="cyan" />
             {/* Widget picker */}
-            <div className="relative">
+            <div className="relative" ref={widgetRef} data-tour="widget-btn">
               <ToolBtn
                 icon={<BarChart2 size={16} />}
                 label="Widget"
@@ -310,7 +446,7 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
                 color="purple"
               />
               {widgetMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 w-56 glass-dark rounded-2xl shadow-2xl border border-white/10 z-50 py-2">
+                <div className="absolute top-full left-0 mt-2 w-60 glass-dark rounded-2xl shadow-2xl border border-white/10 z-50 py-2">
                   {(() => {
                     const subjectPlugins = getPluginsForSubject(subjectId)
                     if (subjectPlugins.length === 0) return (
@@ -320,9 +456,9 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
                       <button
                         key={p.id}
                         onClick={() => { addWidgetNode(p.id); setWidgetMenuOpen(false) }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-all text-left"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-all text-left"
                       >
-                        <span className="text-base">{p.icon}</span>
+                        <span className="text-slate-400 shrink-0">{getWidgetIcon(p.id)}</span>
                         <div>
                           <div className="font-medium text-xs">{p.name}</div>
                           <div className="text-slate-500 text-xs leading-tight">{p.description.substring(0, 52)}…</div>
@@ -336,14 +472,18 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
             <div className="w-px h-6 bg-white/10" />
             <SubjectSelector subjectId={subjectId} onChange={onSubjectChange} />
             <div className="w-px h-6 bg-white/10" />
-            <ToolBtn icon={<Sparkles size={16} />} label="Quiz Me" onClick={() => openPanel('quiz')} active={panelMode === 'quiz'} color="amber" />
-            <ToolBtn icon={<Clock size={16} />} label="Exam" onClick={() => openPanel('exam')} active={panelMode === 'exam'} color="cyan" />
+            <div className="flex items-center gap-2" data-tour="quiz-btns">
+              <ToolBtn icon={<Sparkles size={16} />} label="Quiz Me" onClick={() => openPanel('quiz')} active={panelMode === 'quiz'} color="amber" />
+              <ToolBtn icon={<Clock size={16} />} label="Exam" onClick={() => openPanel('exam')} active={panelMode === 'exam'} color="cyan" />
+            </div>
             <div className="w-px h-6 bg-white/10" />
             <ToolBtn icon={<List size={16} />} label="List" onClick={() => openPanel('list')} active={panelMode === 'list'} color="slate" />
             <div className="w-px h-6 bg-white/10" />
-            <button onClick={() => zoomOut({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom out"><ZoomOut size={15} /></button>
-            <button onClick={() => zoomIn({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom in"><ZoomIn size={15} /></button>
-            <button onClick={() => fitView({ padding: 0.12, duration: 400 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Fit view"><Maximize2 size={15} /></button>
+            <div className="flex items-center" data-tour="zoom-btns">
+              <button onClick={() => zoomOut({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom out"><ZoomOut size={15} /></button>
+              <button onClick={() => zoomIn({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom in"><ZoomIn size={15} /></button>
+              <button onClick={() => fitView({ padding: 0.12, duration: 400 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Fit view"><Maximize2 size={15} /></button>
+            </div>
           </div>
 
           {/* Node count badge */}
@@ -380,6 +520,7 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
             <Controls
               showInteractive={false}
               className="!bg-[#1a1a2e] !border-white/10 !shadow-xl"
+              style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}
             />
           </ReactFlow>
 
@@ -387,7 +528,7 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
           {nodes.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none gap-6">
               <div className="text-center">
-                <p className="text-6xl mb-4">🗺️</p>
+                <Map size={48} className="text-slate-600 mb-4 mx-auto" aria-hidden="true" />
                 <h3 className="text-xl font-semibold text-white mb-2">Your canvas is empty</h3>
                 <p className="text-slate-400 text-sm max-w-xs">
                   Add text notes or images, then branch off conversations with Compass to explore your study material spatially.
@@ -446,6 +587,13 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
           </div>
         )}
       </div>
+
+      {showGuide && (
+        <CanvasTour onDismiss={() => {
+          localStorage.setItem(CANVAS_GUIDE_KEY, '1')
+          setShowGuide(false)
+        }} />
+      )}
     </CanvasContext.Provider>
   )
 }
@@ -458,9 +606,10 @@ interface ToolBtnProps {
   onClick: () => void
   active?: boolean
   color?: string
+  tourId?: string
 }
 
-function ToolBtn({ icon, label, onClick, active, color = 'indigo' }: ToolBtnProps) {
+function ToolBtn({ icon, label, onClick, active, color = 'indigo', tourId }: ToolBtnProps) {
   const activeClasses: Record<string, string> = {
     indigo: 'bg-indigo-500/30 text-indigo-300 border-indigo-500/40',
     cyan: 'bg-cyan-500/30 text-cyan-300 border-cyan-500/40',
@@ -478,6 +627,7 @@ function ToolBtn({ icon, label, onClick, active, color = 'indigo' }: ToolBtnProp
   return (
     <button
       onClick={onClick}
+      data-tour={tourId}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
         active ? activeClasses[color] : `border-transparent text-slate-400 ${colorClasses[color]}`
       }`}
@@ -493,11 +643,22 @@ function ToolBtn({ icon, label, onClick, active, color = 'indigo' }: ToolBtnProp
 function SubjectSelector({ subjectId, onChange }: { subjectId: string; onChange: (id: string) => void }) {
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
   const pinned = user ? getPinnedSubjects(user.id) : []
   const list = pinned.length > 0 ? pinned : SUBJECTS
   const subject = SUBJECTS.find(s => s.id === subjectId) || list[0] || SUBJECTS[0]
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
   return (
-    <div className="relative">
+    <div className="relative" ref={ref} data-tour="subject-btn">
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 px-3 py-1.5 glass rounded-xl text-sm text-white hover:bg-white/10 transition-all"

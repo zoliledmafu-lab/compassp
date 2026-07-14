@@ -124,8 +124,17 @@ export function AnalyticsPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
+        <div className="flex flex-col items-center gap-3 py-16">
           <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-slate-500">Loading your analytics…</p>
+        </div>
+      ) : !user?.school_name ? (
+        <div className="text-center py-16">
+          <BarChart3 size={40} className="text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-300 font-medium">School profile incomplete</p>
+          <p className="text-slate-500 text-sm mt-1 max-w-sm mx-auto">
+            Analytics are grouped by school. Your school name has not been set — please complete your school profile to view usage data.
+          </p>
         </div>
       ) : !hasData ? (
         <div className="text-center py-16">

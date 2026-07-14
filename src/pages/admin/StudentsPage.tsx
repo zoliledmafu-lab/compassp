@@ -3,6 +3,7 @@ import { Users, Search } from 'lucide-react'
 import { Input } from '../../components/ui/Input'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { capitalizeName } from '../../lib/constants'
 import { supabase, SUPABASE_ENABLED } from '../../lib/supabase'
 
 interface StudentRow {
@@ -129,8 +130,17 @@ export function StudentsPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
+        <div className="flex flex-col items-center gap-3 py-16">
           <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-slate-500">Loading your students…</p>
+        </div>
+      ) : !user?.school_name ? (
+        <div className="text-center py-16">
+          <Users size={40} className="text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-300 font-medium">School profile incomplete</p>
+          <p className="text-slate-500 text-sm mt-1 max-w-sm mx-auto">
+            Your school name has not been set. Students are grouped by school name, so you will need to complete your profile before students appear here. Please contact your Compass administrator to update your school profile.
+          </p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
@@ -155,10 +165,10 @@ export function StudentsPage() {
                   <td className="py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
-                        {student.full_name.charAt(0)}
+                        {capitalizeName(student.full_name).charAt(0)}
                       </div>
                       <div>
-                        <p className="font-medium text-white">{student.full_name}</p>
+                        <p className="font-medium text-white">{capitalizeName(student.full_name)}</p>
                         <p className="text-xs text-slate-500">{student.email}</p>
                       </div>
                     </div>

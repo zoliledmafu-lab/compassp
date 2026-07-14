@@ -51,14 +51,13 @@ export async function streamCompletion(
     })
 
     if (!response.ok) {
-      const err = await response.text()
-      onError(`API error: ${response.status} ${err}`)
+      onError('We couldn\'t reach Compass at the moment. Please check your connection and try again.')
       return
     }
 
     const reader = response.body?.getReader()
     const decoder = new TextDecoder()
-    if (!reader) { onError('No response body'); return }
+    if (!reader) { onError('We couldn\'t reach Compass at the moment. Please try again.'); return }
 
     let buffer = ''
     while (true) {
@@ -83,8 +82,8 @@ export async function streamCompletion(
       }
     }
     onDone()
-  } catch (e) {
-    onError(String(e))
+  } catch {
+    onError('We couldn\'t reach Compass at the moment. Please check your connection and try again.')
   }
 }
 

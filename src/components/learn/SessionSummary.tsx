@@ -55,11 +55,11 @@ export function SessionSummary({
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontSize: 44, marginBottom: 8 }}>
-            {pct === 100 ? '🎉' : pct >= 50 ? '⭐' : '💪'}
+          <div style={{ fontSize: 44, fontWeight: 800, marginBottom: 8, background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            {pct}%
           </div>
           <h2 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 800, color: 'white', letterSpacing: '-0.02em' }}>
-            {pct === 100 ? 'Topic Complete!' : 'Good session!'}
+            {pct === 100 ? 'Topic complete' : 'Session complete'}
           </h2>
           <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.38)' }}>
             {subjectName} · {topicTitle}

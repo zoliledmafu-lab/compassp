@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import type { UserRole } from '../../lib/supabase'
 import type { Language } from '../../lib/i18n'
+import { AUTH_PAGE_BG } from '../../lib/constants'
 
 const CURRICULUM_OPTIONS = [
   {
@@ -84,10 +85,8 @@ export function SignupPage() {
     else { setLanguage(selectedLang); navigate('/dashboard') }
   }
 
-  const bg = 'radial-gradient(ellipse at 30% 20%, rgba(79,70,229,0.15) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(124,58,237,0.1) 0%, transparent 60%), #0f0f1a'
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: AUTH_PAGE_BG }}>
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">

@@ -6,6 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext'
 import { useMemory } from '../../../contexts/MemoryContext'
 import { getPlugin } from '../../../widgets/registry'
 import { useWidgetGuidance } from '../../../widgets/useWidgetGuidance'
+import { getWidgetIcon } from '../../../widgets/icons'
 import { SUBJECTS } from '../../../lib/subjects'
 import type { WidgetRFNodeData } from '../types'
 import type { WidgetNodeData, StateSnapshot } from '../../../widgets/types'
@@ -71,8 +72,8 @@ export function WidgetNode({ id, data, selected }: Props) {
   return (
     <>
       <NodeResizer
-        minWidth={400}
-        minHeight={320}
+        minWidth={280}
+        minHeight={240}
         isVisible={selected}
         lineClassName="border-purple-500"
         handleClassName="w-3 h-3 bg-purple-500 rounded-sm border border-purple-300"
@@ -86,7 +87,7 @@ export function WidgetNode({ id, data, selected }: Props) {
         style={{
           background: '#1a1040',
           border: selected ? '1.5px solid #a855f780' : '1.5px solid #7c3aed40',
-          minWidth: 400,
+          minWidth: 'min(400px, calc(100vw - 80px))',
           boxShadow: selected ? '0 0 0 2px #a855f740' : undefined,
         }}
       >
@@ -99,7 +100,7 @@ export function WidgetNode({ id, data, selected }: Props) {
             ?.dispatchEvent(new MouseEvent('mousedown', e.nativeEvent))}
         >
           <div className="flex items-center gap-2">
-            <span className="text-base">{plugin.icon}</span>
+            <span className="text-purple-400">{getWidgetIcon(data.widgetId)}</span>
             <span className="text-xs font-semibold text-purple-200">{plugin.name}</span>
           </div>
           <div className="nodrag flex items-center gap-1">

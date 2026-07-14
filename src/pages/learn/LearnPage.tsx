@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Mic } from 'lucide-react'
 import { getTopic, getTopicsForSubject } from '../../lib/learningTopics'
 import { SUBJECTS, getSubject } from '../../lib/learningTypes'
 import { LearningEnvironment } from '../../components/learn/LearningEnvironment'
@@ -48,98 +49,42 @@ export function LearnPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#07091A',
-      fontFamily: "'Inter', system-ui, sans-serif",
-      color: 'rgba(255,255,255,0.88)',
-      position: 'relative',
-      overflowX: 'hidden',
-    }}>
+    <div className="relative overflow-x-hidden min-h-full">
 
-      {/* Ambient background mesh */}
+      {/* Ambient background mesh — fixed, subtle, z-0 */}
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: `
-          radial-gradient(ellipse 80% 50% at 20% -10%, rgba(${accentRgb},0.12) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 40% at 80% 110%, rgba(99,102,241,0.08) 0%, transparent 60%)
+          radial-gradient(ellipse 80% 50% at 20% -10%, rgba(${accentRgb},0.10) 0%, transparent 60%),
+          radial-gradient(ellipse 60% 40% at 80% 110%, rgba(99,102,241,0.06) 0%, transparent 60%)
         `,
         transition: 'background 0.6s ease',
       }} />
 
-      {/* ── Top navigation bar ─────────────────────────────────────────── */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 30,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 20px', height: 56,
-        background: 'rgba(7,9,26,0.8)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-      }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 10,
-            background: 'linear-gradient(135deg, #0d9488 0%, #d97706 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16,
-            boxShadow: '0 4px 14px rgba(13,148,136,0.4)',
-          }}>🧭</div>
-          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: 'white' }}>
-            Compass
-          </span>
-        </div>
+      <div style={{ position: 'relative', zIndex: 1 }} className="p-6 max-w-5xl mx-auto pb-24">
 
-        {/* Right actions */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        {/* ── Page header ──────────────────────────────────────────── */}
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Interactive Learning</h1>
+            <p className="text-slate-400 mt-1 text-sm">
+              Explore topics with interactive widgets and your AI companion.
+            </p>
+          </div>
           <button
             onClick={() => setShowVoice(v => !v)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600,
-              background: showVoice ? activeSubject?.color : 'rgba(255,255,255,0.07)',
-              color: showVoice ? 'white' : 'rgba(255,255,255,0.65)',
-              border: `1px solid ${showVoice ? 'transparent' : 'rgba(255,255,255,0.1)'}`,
-              cursor: 'pointer', transition: 'all 0.2s',
-              boxShadow: showVoice ? `0 0 20px ${activeSubject?.color}50` : 'none',
-            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
+              showVoice
+                ? 'text-white border border-transparent'
+                : 'glass text-slate-400 hover:text-white border border-white/10'
+            }`}
+            style={showVoice ? {
+              background: activeSubject?.color,
+              boxShadow: `0 0 20px ${activeSubject?.color}50`,
+            } : undefined}
           >
-            🎙 Voice
+            <Mic size={15} /> Voice
           </button>
-          <button
-            onClick={() => navigate('/dashboard')}
-            style={{
-              padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500,
-              background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)',
-              border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer',
-            }}
-          >
-            ← Back
-          </button>
-        </div>
-      </div>
-
-      <div style={{ position: 'relative', zIndex: 1, padding: '0 20px 100px' }}>
-
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <div style={{ padding: '36px 0 28px' }}>
-          <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>
-            ZIMSEC Interactive Lessons
-          </p>
-          <h1 style={{ margin: 0, fontSize: 'clamp(28px, 6vw, 40px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.03em', color: 'white' }}>
-            Learn. Explore.
-            <span style={{
-              display: 'block',
-              background: activeSubject?.gradient ?? 'linear-gradient(135deg, #818cf8, #c084fc)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              transition: 'background 0.4s',
-            }}>
-              Discover.
-            </span>
-          </h1>
-          <p style={{ margin: '12px 0 0', fontSize: 15, color: 'rgba(255,255,255,0.38)', fontWeight: 400, lineHeight: 1.5 }}>
-            Interactive widgets with your AI companion Compass
-          </p>
         </div>
 
         {/* ── Subject grid ──────────────────────────────────────────────── */}
@@ -243,8 +188,7 @@ export function LearnPage() {
                 background: 'rgba(255,255,255,0.02)', borderRadius: 20,
                 border: '1px solid rgba(255,255,255,0.06)',
               }}>
-                <p style={{ margin: '0 0 6px', fontSize: 32 }}>🚧</p>
-                <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.35)' }}>Topics coming soon for this subject</p>
+                <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.35)' }}>Topics for this subject are coming soon.</p>
               </div>
             )}
 
@@ -364,7 +308,7 @@ export function LearnPage() {
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
               <div>
-                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>🎙 Choose Voice</p>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Voice Settings</p>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Your AI companion's voice</p>
               </div>
               <button

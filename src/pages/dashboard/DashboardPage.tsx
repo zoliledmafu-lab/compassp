@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MessageSquare, Layers, BookOpen, Flame, Brain, Target, Plus, X, Check, TrendingUp } from 'lucide-react'
+import { MessageSquare, Layers, BookOpen, Flame, Brain, Target, Plus, X, Check, TrendingUp, Settings2, Users, BarChart2 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useMemory } from '../../contexts/MemoryContext'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { capitalizeName } from '../../lib/constants'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import {
@@ -25,12 +26,12 @@ function AdminDashboard() {
       </div>
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
         {[
-          { to: '/admin/rules',     icon: '⚙️', label: 'Rule Engine',   desc: 'Configure AI behaviour' },
-          { to: '/admin/students',  icon: '👥', label: 'Students',       desc: 'Manage student roster' },
-          { to: '/admin/analytics', icon: '📊', label: 'Analytics',      desc: 'View usage & performance' },
+          { to: '/admin/rules',     icon: <Settings2 size={24} className="text-indigo-300" />, label: 'Rule Engine',   desc: 'Configure AI behaviour' },
+          { to: '/admin/students',  icon: <Users size={24} className="text-purple-300" />,     label: 'Students',      desc: 'Manage student roster' },
+          { to: '/admin/analytics', icon: <BarChart2 size={24} className="text-teal-300" />,   label: 'Analytics',     desc: 'View usage and performance' },
         ].map(item => (
           <Card key={item.to} hover onClick={() => navigate(item.to)} className="flex flex-col gap-3">
-            <span className="text-3xl">{item.icon}</span>
+            <div className="w-10 h-10 glass rounded-xl flex items-center justify-center">{item.icon}</div>
             <div>
               <h3 className="font-semibold text-white">{item.label}</h3>
               <p className="text-sm text-slate-400">{item.desc}</p>
@@ -121,10 +122,7 @@ function AddSubjectsPanel({ available, pinned, onToggle, onClose }: AddSubjectsP
   }, {})
 
   return (
-    <div
-      className="rounded-2xl border border-white/10 overflow-hidden"
-      style={{ background: '#13131f' }}
-    >
+    <div className="glass-dark rounded-2xl border border-white/10 overflow-hidden">
       {/* Panel header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
         <div>
@@ -173,8 +171,7 @@ function AddSubjectsPanel({ available, pinned, onToggle, onClose }: AddSubjectsP
       <div className="px-4 py-3 border-t border-white/8 flex justify-end">
         <button
           onClick={onClose}
-          className="px-4 py-2 rounded-xl text-sm font-medium text-white"
-          style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+          className="px-4 py-2 rounded-xl text-sm font-medium text-white gradient-primary"
         >
           Done
         </button>
@@ -226,7 +223,7 @@ export function DashboardPage() {
       {/* ── Welcome ────────────────────────────────────────────────── */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          {t(greetingKey())}, {user.full_name?.split(' ')[0]}
+          {t(greetingKey())}, {capitalizeName(user.full_name).split(' ')[0]}
         </h1>
         <p className="text-slate-400 mt-1 text-sm">
           {pinnedSubjects.length === 0

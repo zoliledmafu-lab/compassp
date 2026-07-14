@@ -504,7 +504,7 @@ export function ExamPanel({ nodes, subjectId, onClose }: Props) {
               <p className="text-4xl font-bold text-gradient">{pct}%</p>
               <p className="text-sm text-slate-400 mt-1">{totalScore} / {maxScore} marks</p>
               <p className="text-xs text-slate-500 mt-3">
-                {pct >= 80 ? '🌟 Excellent work!' : pct >= 60 ? '👍 Good effort — review the feedback below.' : '📚 Keep practising — focus on the areas below.'}
+                {pct >= 80 ? 'Strong performance. Review the feedback to confirm your understanding.' : pct >= 60 ? 'Good effort. Review the feedback below to identify gaps.' : 'Keep practising — focus on the areas flagged below.'}
               </p>
             </div>
 

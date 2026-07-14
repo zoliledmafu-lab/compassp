@@ -167,7 +167,7 @@ export function QuizPanel({ nodes, subjectId, onClose }: Props) {
               <p className="text-sm text-slate-300 italic">{answer}</p>
             </div>
             <div className="glass rounded-2xl p-4 border border-amber-500/20">
-              <p className="text-xs text-amber-400 mb-2 font-medium flex items-center gap-1">🧭 Compass feedback</p>
+              <p className="text-xs text-amber-400 mb-2 font-medium">Compass feedback</p>
               {feedback ? (
                 <div className="prose prose-invert prose-sm max-w-none text-slate-200">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{feedback}</ReactMarkdown>
@@ -195,14 +195,12 @@ export function QuizPanel({ nodes, subjectId, onClose }: Props) {
           <div className="flex flex-col items-center justify-center h-full gap-5 text-center py-8">
             {error ? (
               <>
-                <p className="text-4xl">😔</p>
                 <p className="text-sm text-slate-400">{error}</p>
               </>
             ) : (
               <>
-                <p className="text-5xl">🎉</p>
                 <div>
-                  <p className="text-lg font-bold text-white">Quiz complete!</p>
+                  <p className="text-lg font-bold text-white">Quiz complete</p>
                   <p className="text-sm text-slate-400 mt-2 max-w-[240px]">
                     Great work working through {questions.length} questions. Review the feedback above to identify what to revise next.
                   </p>

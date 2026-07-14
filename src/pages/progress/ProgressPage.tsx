@@ -7,11 +7,11 @@ import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 
 const ENCOURAGEMENTS = [
-  "Every question you ask makes you smarter. Keep going!",
-  "Struggle is the sign of growth. You're doing great.",
-  "The fact that you're here means you care about learning. That matters.",
-  "Every hint you worked through is a skill you now own.",
-  "Consistency beats intensity. You're building something real.",
+  "Every question you work through builds understanding that lasts.",
+  "Struggle is the sign of genuine learning. That is progress.",
+  "Returning to revise is exactly how strong students prepare.",
+  "Every concept you explore becomes a skill you carry into the exam.",
+  "Consistency is what separates preparation from performance.",
 ]
 
 export function ProgressPage() {
@@ -23,6 +23,7 @@ export function ProgressPage() {
   const active = subjectData.filter(d => d.memory !== null)
   const totalSessions = active.reduce((a, d) => a + (d.memory?.session_count || 0), 0)
   const totalTopics = active.reduce((a, d) => a + (d.memory?.topics_covered.length || 0), 0)
+  const streakDays = totalSessions > 0 ? 1 : 0
 
   const encouragement = ENCOURAGEMENTS[Math.floor(Date.now() / 86400000) % ENCOURAGEMENTS.length]
 
@@ -45,7 +46,7 @@ export function ProgressPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {[
-          { icon: <Flame className="text-orange-400" size={20} />, label: 'Day streak', value: '3', bg: 'bg-orange-400/10' },
+          { icon: <Flame className="text-orange-400" size={20} />, label: 'Day streak', value: streakDays === 0 ? '0' : `${streakDays}`, bg: 'bg-orange-400/10' },
           { icon: <Brain className="text-purple-400" size={20} />, label: 'Subjects', value: `${active.length}`, bg: 'bg-purple-400/10' },
           { icon: <MessageSquare className="text-indigo-400" size={20} />, label: 'Sessions', value: `${totalSessions}`, bg: 'bg-indigo-400/10' },
           { icon: <Target className="text-green-400" size={20} />, label: 'Topics', value: `${totalTopics}`, bg: 'bg-green-400/10' },
@@ -68,7 +69,7 @@ export function ProgressPage() {
       {active.length === 0 ? (
         <Card className="text-center py-10">
           <Brain size={40} className="text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 mb-4">No study sessions yet. Start a chat to track your progress!</p>
+          <p className="text-slate-400 mb-4">No sessions recorded yet. Start a study session to begin tracking your progress.</p>
           <Button onClick={() => navigate('/subjects')}>Browse Subjects</Button>
         </Card>
       ) : (

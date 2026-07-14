@@ -252,21 +252,16 @@ export function BranchPanel({ branchNodeId, allNodes, subjectId, onClose, onBran
 function BranchBubble({ msg, streaming }: { msg: BranchMessage; streaming?: boolean }) {
   const isUser = msg.role === 'user'
   return (
-    <div className={`flex gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 mt-0.5 ${isUser ? 'gradient-primary text-white' : 'bg-purple-900/60 text-purple-300 border border-purple-500/30'}`}>
-        {isUser ? '👤' : '🧭'}
-      </div>
-      <div className={`flex-1 ${isUser ? 'flex justify-end' : ''}`}>
-        <div className={`rounded-2xl px-3 py-2 text-xs leading-relaxed max-w-[88%] ${isUser ? 'gradient-primary text-white rounded-tr-sm' : 'glass text-slate-100 rounded-tl-sm'}`}>
-          {isUser ? (
-            <p className="whitespace-pre-wrap">{msg.content}</p>
-          ) : (
-            <div className="prose prose-invert prose-xs max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
-              {streaming && <span className="inline-block w-1.5 h-3 bg-purple-400 animate-pulse rounded-sm ml-0.5 align-text-bottom" />}
-            </div>
-          )}
-        </div>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div className={`rounded-2xl px-3 py-2 text-xs leading-relaxed max-w-[88%] ${isUser ? 'gradient-primary text-white rounded-tr-sm' : 'glass text-slate-100 rounded-tl-sm'}`}>
+        {isUser ? (
+          <p className="whitespace-pre-wrap">{msg.content}</p>
+        ) : (
+          <div className="prose prose-invert prose-xs max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+            {streaming && <span className="inline-block w-1.5 h-3 bg-purple-400 animate-pulse rounded-sm ml-0.5 align-text-bottom" />}
+          </div>
+        )}
       </div>
     </div>
   )

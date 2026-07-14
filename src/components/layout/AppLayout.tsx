@@ -53,8 +53,9 @@ export function AppLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-slate-500">Preparing your dashboard…</p>
       </div>
     )
   }
@@ -70,7 +71,7 @@ export function AppLayout() {
         <Sidebar />
       </div>
       {/* Main content: bottom padding on mobile for the nav bar */}
-      <main className="flex-1 overflow-auto pb-16 md:pb-0">
+      <main className="flex-1 overflow-auto bg-[#07091a] pb-16 md:pb-0">
         <Outlet />
       </main>
       <MobileBottomNav />

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { capitalizeName } from '../../lib/constants'
 import type { Translations } from '../../lib/i18n'
 import type { Language } from '../../lib/i18n'
 
@@ -40,7 +41,7 @@ export function Sidebar() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
 
   const visibleItems = NAV_ITEMS.filter(item => {
     if (item.adminOnly && user?.role !== 'admin') return false
@@ -129,10 +130,10 @@ export function Sidebar() {
         {!collapsed && (
           <div className="flex items-center gap-3 px-2 py-2">
             <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {user?.full_name?.charAt(0) || '?'}
+              {capitalizeName(user?.full_name).charAt(0) || '?'}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.full_name}</p>
+              <p className="text-sm font-medium text-white truncate">{capitalizeName(user?.full_name)}</p>
               <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { AUTH_PAGE_BG } from '../../lib/constants'
 
 const CURRICULUM_OPTIONS = [
   {
@@ -32,8 +33,6 @@ const CURRICULUM_OPTIONS = [
     codes: ['ZIMSEC-OL', 'ZIMSEC-AL', 'CAM-IGCSE', 'CAM-AL'],
   },
 ] as const
-
-const bg = 'radial-gradient(ellipse at 30% 20%, rgba(79,70,229,0.15) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(124,58,237,0.1) 0%, transparent 60%), #0f0f1a'
 
 export function OnboardingPage() {
   const { user, updateProfile } = useAuth()
@@ -66,11 +65,12 @@ export function OnboardingPage() {
     }
 
     setLoading(false)
+    sessionStorage.setItem('compass_new_signup', '1')
     navigate('/dashboard', { replace: true })
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bg }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: AUTH_PAGE_BG }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 gradient-primary rounded-2xl glow mb-4">

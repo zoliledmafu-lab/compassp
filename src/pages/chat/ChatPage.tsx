@@ -538,7 +538,7 @@ export function ChatPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">{subject.name}</h2>
               <p className="text-slate-400 max-w-md">
-                Ask me anything about {subject.name}. I'll guide you step by step — no shortcuts, just understanding.
+                Ask a question about {subject.name} and Compass will guide you through it step by step.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
@@ -635,7 +635,7 @@ export function ChatPage() {
           </Button>
         </div>
         <p className="text-center text-xs text-slate-600 mt-2">
-          Compass guides — it never hands you the answer. That's how real learning works.
+          Compass guides you to the answer rather than providing it. That is how lasting understanding is built.
         </p>
       </div>
     </div>
@@ -700,29 +700,22 @@ function formatRelativeDate(date: Date): string {
 function MessageBubble({ message, streaming }: { message: Message; streaming?: boolean }) {
   const isUser = message.role === 'user'
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''} max-w-4xl mx-auto w-full`}>
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 mt-1 ${
-        isUser ? 'gradient-primary text-white' : 'bg-indigo-900/60 text-indigo-300 border border-indigo-500/30'
+    <div className={`flex max-w-4xl mx-auto w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed max-w-[82%] ${
+        isUser
+          ? 'gradient-primary text-white rounded-tr-sm'
+          : 'glass text-slate-100 rounded-tl-sm'
       }`}>
-        {isUser ? '👤' : '🧭'}
-      </div>
-      <div className={`flex-1 ${isUser ? 'flex justify-end' : ''}`}>
-        <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed max-w-[85%] ${
-          isUser
-            ? 'gradient-primary text-white rounded-tr-sm'
-            : 'glass text-slate-100 rounded-tl-sm'
-        }`}>
-          {isUser ? (
-            <p className="whitespace-pre-wrap">{message.content}</p>
-          ) : (
-            <div className="prose prose-invert prose-sm max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-              {streaming && (
-                <span className="inline-block w-2 h-4 bg-indigo-400 animate-pulse rounded-sm ml-1 align-text-bottom" />
-              )}
-            </div>
-          )}
-        </div>
+        {isUser ? (
+          <p className="whitespace-pre-wrap">{message.content}</p>
+        ) : (
+          <div className="prose prose-invert prose-sm max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            {streaming && (
+              <span className="inline-block w-2 h-4 bg-indigo-400 animate-pulse rounded-sm ml-1 align-text-bottom" />
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

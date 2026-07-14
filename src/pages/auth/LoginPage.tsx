@@ -4,6 +4,7 @@ import { Mail, Lock, Compass, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { AUTH_PAGE_BG } from '../../lib/constants'
 
 function GoogleIcon() {
   return (
@@ -59,7 +60,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(ellipse at 30% 20%, rgba(79,70,229,0.15) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(124,58,237,0.1) 0%, transparent 60%), #0f0f1a' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: AUTH_PAGE_BG }}>
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
@@ -140,8 +141,10 @@ export function LoginPage() {
               <div
                 role="checkbox"
                 aria-checked={rememberMe}
+                tabIndex={0}
                 onClick={() => setRememberMe(v => !v)}
-                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${rememberMe ? 'border-indigo-500 bg-indigo-500' : 'border-white/20 bg-transparent'}`}
+                onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setRememberMe(v => !v) } }}
+                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-[#0f0f1a] ${rememberMe ? 'border-indigo-500 bg-indigo-500' : 'border-white/20 bg-transparent'}`}
               >
                 {rememberMe && (
                   <svg viewBox="0 0 12 12" width="10" height="10">
