@@ -205,7 +205,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: { data: { full_name: fullName, role, curricula, school_name: schoolName } },
     })
-    if (signUpError) return { error: signUpError.message }
+    if (signUpError) {
+      const msg = signUpError.message
+      if (/stronger|weak|password strength/i.test(msg)) {
+        return { error: 'Password is too weak. Use at least 8 characters with uppercase, lowercase, a number, and a symbol (e.g. !, @, #, $).' }
+      }
+      return { error: msg }
+    }
 
     // Sign in immediately after signup
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })

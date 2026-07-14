@@ -61,9 +61,24 @@ export function SignupPage() {
   const [error,        setError]        = useState('')
   const [loading,      setLoading]      = useState(false)
 
+  const passwordStrength = (() => {
+    const checks = {
+      length:  password.length >= 8,
+      upper:   /[A-Z]/.test(password),
+      lower:   /[a-z]/.test(password),
+      number:  /[0-9]/.test(password),
+      special: /[^A-Za-z0-9]/.test(password),
+    }
+    const passed = Object.values(checks).filter(Boolean).length
+    return { checks, score: passed }
+  })()
+
   const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault()
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return }
+    if (passwordStrength.score < 5) {
+      setError('Password does not meet all requirements below.')
+      return
+    }
     setError('')
     setStep(2)
   }
@@ -136,21 +151,41 @@ export function SignupPage() {
                 <Input label="Full name" type="text" placeholder="Your full name" value={fullName} onChange={e => setFullName(e.target.value)} icon={<User size={16} />} required />
                 <Input label="School name" type="text" placeholder="e.g. Harare High School" value={schoolName} onChange={e => setSchoolName(e.target.value)} icon={<Building2 size={16} />} required />
                 <Input label="Email address" type="email" placeholder="you@school.edu" value={email} onChange={e => setEmail(e.target.value)} icon={<Mail size={16} />} required autoComplete="email" />
-                <Input
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Min 6 characters"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  icon={<Lock size={16} />}
-                  rightIcon={
-                    <button type="button" onClick={() => setShowPassword(v => !v)} className="text-slate-400 hover:text-white transition-colors" tabIndex={-1}>
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  }
-                  required
-                  autoComplete="new-password"
-                />
+                <div>
+                  <Input
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Min 8 characters"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    icon={<Lock size={16} />}
+                    rightIcon={
+                      <button type="button" onClick={() => setShowPassword(v => !v)} className="text-slate-400 hover:text-white transition-colors" tabIndex={-1}>
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    }
+                    required
+                    autoComplete="new-password"
+                  />
+                  {password.length > 0 && (
+                    <div className="mt-2 flex flex-col gap-1">
+                      {[
+                        { key: 'length',  label: 'At least 8 characters',       ok: passwordStrength.checks.length },
+                        { key: 'upper',   label: 'One uppercase letter (A–Z)',   ok: passwordStrength.checks.upper },
+                        { key: 'lower',   label: 'One lowercase letter (a–z)',   ok: passwordStrength.checks.lower },
+                        { key: 'number',  label: 'One number (0–9)',             ok: passwordStrength.checks.number },
+                        { key: 'special', label: 'One symbol (e.g. ! @ # $ %)', ok: passwordStrength.checks.special },
+                      ].map(r => (
+                        <div key={r.key} className="flex items-center gap-1.5">
+                          <span className={`text-xs ${r.ok ? 'text-green-400' : 'text-slate-500'}`}>
+                            {r.ok ? '✓' : '○'}
+                          </span>
+                          <span className={`text-xs ${r.ok ? 'text-green-400' : 'text-slate-500'}`}>{r.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400">{error}</div>
