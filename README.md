@@ -5,8 +5,8 @@
 Compass is an AI-powered Socratic tutor for Zimbabwean secondary school students, supporting ZIMSEC and Cambridge curricula in English, Shona, and Ndebele, with offline capability for low-connectivity environments.
 
 **Live demo:** https://compassp.vercel.app  
-Student demo → `student@compass.edu` / `student123`  
-Admin demo → `admin@compass.edu` / `admin123`
+Student demo → `demostudent852@gmail.com` / `compass1234.`  
+Admin demo → `admindemo852@gmail.com` / `compass1234.`
 
 ---
 
