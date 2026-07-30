@@ -17,7 +17,6 @@ import type {
 import { getSubject } from '../../lib/learningTypes'
 import { queryLearningCompanion, chatWithCompanion } from '../../lib/learnApi'
 import { voiceService } from '../../lib/voiceService'
-import { useLanguage } from '../../contexts/LanguageContext'
 import { CompassCharacter } from './CompassCharacter'
 import { DrawOverlay } from './DrawOverlay'
 import { ProgressBar } from './ProgressBar'
@@ -86,7 +85,6 @@ let _msgId = 0
 const nextId = () => ++_msgId
 
 export function LearningEnvironment({ topic, onExit }: Props) {
-  const { aiInstruction } = useLanguage()
   const [stepIndex,       setStepIndex]       = useState(0)
   const [widgetState,     setWidgetState]      = useState<WidgetState>(() => getFirstState(topic.steps[0]))
   const [charState,       setCharState]        = useState<CharacterState>('idle')
@@ -186,7 +184,7 @@ export function LearningEnvironment({ topic, onExit }: Props) {
 
   const askCompanion = useCallback(async (trigger: 'widget_change' | 'check' | 'session_start') => {
     if (trigger === 'widget_change') setCharState('thinking')
-    const resp = await queryLearningCompanion(topic, step, widgetState, trigger, hintsUsed, aiInstruction)
+    const resp = await queryLearningCompanion(topic, step, widgetState, trigger, hintsUsed)
 
     if (resp.annotations.length > 0 && isGraphWidget) {
       moveCharToward(resp.annotations[0])

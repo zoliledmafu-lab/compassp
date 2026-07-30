@@ -129,13 +129,12 @@ export async function queryLearningCompanion(
   widgetState: WidgetState,
   trigger: 'widget_change' | 'check' | 'session_start',
   hintsUsed: number,
-  languageInstruction?: string,
 ): Promise<LearningResponse> {
   if (!ANTHROPIC_KEY || ANTHROPIC_KEY.includes('placeholder')) {
     return getMockResponse(step, widgetState, trigger)
   }
 
-  const systemPrompt = `${languageInstruction ? `${languageInstruction}\n\n` : ''}You are Compass — a warm, playful AI tutor for Zimbabwean students (ZIMSEC curriculum).
+  const systemPrompt = `You are Compass — a warm, playful AI tutor for Zimbabwean students (ZIMSEC curriculum).
 You live INSIDE an interactive widget. You are brief and encouraging.
 
 Topic: "${topic.title}" (${topic.subjectId})

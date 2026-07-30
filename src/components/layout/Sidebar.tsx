@@ -3,13 +3,12 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   MessageSquare, BookOpen, LayoutDashboard, Settings,
   LogOut, ChevronLeft, ChevronRight, Users, BarChart3,
-  Compass, Layers, Brain, Zap, Globe,
+  Compass, Layers, Brain, Zap,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { capitalizeName } from '../../lib/constants'
 import type { Translations } from '../../lib/i18n'
-import type { Language } from '../../lib/i18n'
 
 interface NavItem {
   to: string
@@ -31,16 +30,10 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/analytics', icon: <BarChart3 size={18} />,labelKey: 'nav_analytics',adminOnly: true },
 ]
 
-const LANG_OPTIONS: { code: Language; short: string }[] = [
-  { code: 'en', short: 'EN' },
-  { code: 'sn', short: 'SN' },
-  { code: 'nd', short: 'ND' },
-]
-
 export function Sidebar() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  const { language, setLanguage, t } = useLanguage()
+  const { t } = useLanguage()
   const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
 
   const visibleItems = NAV_ITEMS.filter(item => {
@@ -89,41 +82,6 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
-
-      {/* Language switcher */}
-      <div className={`px-3 pb-2 border-t border-white/8 pt-3 ${collapsed ? 'flex justify-center' : ''}`}>
-        {collapsed ? (
-          <button
-            className="p-2 rounded-xl text-slate-500 hover:text-indigo-400 hover:bg-white/5 transition-all"
-            title={`Language: ${language.toUpperCase()}`}
-            onClick={() => {
-              const idx = LANG_OPTIONS.findIndex(l => l.code === language)
-              setLanguage(LANG_OPTIONS[(idx + 1) % LANG_OPTIONS.length].code)
-            }}
-          >
-            <Globe size={16} />
-          </button>
-        ) : (
-          <div className="flex flex-col gap-1">
-            <p className="text-xs font-semibold text-slate-600 px-1 tracking-wide uppercase">{t('lang_label')}</p>
-            <div className="flex gap-1">
-              {LANG_OPTIONS.map(opt => (
-                <button
-                  key={opt.code}
-                  onClick={() => setLanguage(opt.code)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold tracking-wider transition-all ${
-                    language === opt.code
-                      ? 'gradient-primary text-white'
-                      : 'text-slate-500 hover:text-white hover:bg-white/8 border border-white/8'
-                  }`}
-                >
-                  {opt.short}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* User + collapse */}
       <div className="border-t border-white/8 p-3 flex flex-col gap-2">

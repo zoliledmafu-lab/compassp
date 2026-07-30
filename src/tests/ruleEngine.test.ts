@@ -106,29 +106,28 @@ describe('detectFrustration', () => {
 // ─── buildSystemPrompt ────────────────────────────────────────────────────────
 
 describe('buildSystemPrompt', () => {
-  it('places language instruction at the very start of the prompt', () => {
-    const instruction = 'CRITICAL LANGUAGE RULE: Respond ONLY in English.'
-    const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0, instruction)
-    expect(prompt.startsWith(instruction)).toBe(true)
-  })
-
-  it('starts with "You are Compass" when no language instruction is provided', () => {
+  it('starts with "You are Compass"', () => {
     const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0)
     expect(prompt.startsWith('You are Compass')).toBe(true)
   })
 
   it('includes FRUSTRATION DETECTED section when frustration flag is true', () => {
-    const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0, undefined, true)
+    const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0, true)
     expect(prompt).toContain('FRUSTRATION DETECTED')
   })
 
   it('omits FRUSTRATION DETECTED section when frustration flag is false', () => {
-    const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0, undefined, false)
+    const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0, false)
     expect(prompt).not.toContain('FRUSTRATION DETECTED')
   })
 
   it('includes the subject name in the generated prompt', () => {
     const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0)
     expect(prompt).toContain('Mathematics')
+  })
+
+  it('includes scaffold level instruction in the prompt', () => {
+    const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0)
+    expect(prompt).toContain('LEVEL 1')
   })
 })
