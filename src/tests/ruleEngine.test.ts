@@ -106,9 +106,9 @@ describe('detectFrustration', () => {
 // ─── buildSystemPrompt ────────────────────────────────────────────────────────
 
 describe('buildSystemPrompt', () => {
-  it('starts with "You are Compass"', () => {
+  it('starts with the English-only rule', () => {
     const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0)
-    expect(prompt.startsWith('You are Compass')).toBe(true)
+    expect(prompt.startsWith('CRITICAL — ENGLISH ONLY')).toBe(true)
   })
 
   it('includes FRUSTRATION DETECTED section when frustration flag is true', () => {
