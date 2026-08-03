@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { MermaidDiagram } from '../../components/chat/MermaidDiagram'
+import { FunctionPlot, parseFunctionPlot } from '../../components/chat/FunctionPlot'
+import { VizBlock, parseVizBlock } from '../../components/chat/VizBlock'
 import {
   Send, Paperclip, Volume2, VolumeX, RefreshCw,
   Lightbulb, BookOpen, ChevronDown, Mic, MicOff, Clock,
@@ -598,7 +601,45 @@ function MessageBubble({ message, streaming }: { message: Message; streaming?: b
           <p className="whitespace-pre-wrap">{message.content}</p>
         ) : (
           <div className="prose prose-invert prose-sm max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code({ className, children }) {
+                  const lang = (className ?? '').replace('language-', '').trim()
+                  const raw = String(children).replace(/\n$/, '')
+
+                  if (lang === 'mermaid') {
+                    return <MermaidDiagram code={raw} isStreaming={streaming} />
+                  }
+                  if (lang === 'graph') {
+                    const cfg = parseFunctionPlot(raw)
+                    if (cfg) return <FunctionPlot config={cfg} />
+                  }
+                  if (lang === 'viz') {
+                    const cfg = parseVizBlock(raw)
+                    if (cfg) return <VizBlock config={cfg} />
+                  }
+                  if (lang === 'svg') {
+                    return (
+                      <div
+                        className="my-3 overflow-x-auto bg-white/5 border border-white/8 rounded-xl p-4"
+                        dangerouslySetInnerHTML={{ __html: raw }}
+                      />
+                    )
+                  }
+                  // Default: styled inline/block code
+                  return lang ? (
+                    <pre className="bg-white/8 rounded-lg p-3 overflow-x-auto text-xs leading-relaxed">
+                      <code>{raw}</code>
+                    </pre>
+                  ) : (
+                    <code className="bg-white/10 rounded px-1 py-0.5 text-indigo-300 text-xs">{raw}</code>
+                  )
+                },
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
             {streaming && (
               <span className="inline-block w-2 h-4 bg-indigo-400 animate-pulse rounded-sm ml-1 align-text-bottom" />
             )}

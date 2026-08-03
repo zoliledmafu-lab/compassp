@@ -465,14 +465,153 @@ function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrat
   const lower = userMsg.toLowerCase()
   const turnCount = messages.filter(m => m.role === 'assistant').length
 
-  // ── Frustration acknowledgement (prepended when detected) ─────
+  // ── Frustration acknowledgement ───────────────────────────────
   const frustrationPrefix = frustrated
     ? "I can hear this is getting tough — that's completely normal. Let's slow right down and go one step at a time.\n\n"
     : ''
 
   // ── Greeting ──────────────────────────────────────────────────
-  if (turnCount === 0 && /^(hello|hi|hey|good (morning|afternoon|evening)|sawubona|mhoro)/i.test(lower)) {
-    return "Hey! 👋 I'm Compass — your study companion. I won't just hand you answers, but I *will* walk through everything with you until it actually clicks.\n\n**What are you working on? Tell me.**"
+  if (turnCount === 0 && /^(hello|hi|hey|good (morning|afternoon|evening))/i.test(lower)) {
+    return "Hey! I'm Compass — your study companion. I won't just hand you answers, but I *will* walk through everything with you until it clicks.\n\n**What are you working on?**"
+  }
+
+  // ── Visualization requests (handled at any level) ─────────────
+
+  // Flowchart / diagram requests
+  if (/flowchart|diagram|show me|draw|visuali[sz]e|mind.?map|chart/i.test(lower)) {
+    if (/quadratic|x²|parabola|factori[sz]/i.test(lower)) {
+      return `${frustrationPrefix}Here's a flowchart for solving a quadratic equation:
+
+\`\`\`mermaid
+flowchart TD
+    A[ax2 plus bx plus c equals 0] --> B{Can you factorise}
+    B -->|Yes| C[Find two numbers]
+    C --> D[Numbers multiply to c and add to b]
+    D --> G[Write as two brackets]
+    G --> H[Set each bracket to zero and solve]
+    B -->|No| E{Simple form}
+    E -->|Yes| F[Square root both sides]
+    E -->|No| I[Use the quadratic formula]
+    F --> J[Solve for x]
+    H --> J
+    I --> J
+    J --> K[Check by substituting back]
+\`\`\`
+
+Three paths exist — factorising is fastest when it works, the formula always works.
+
+**Which path do you think applies to your equation?**`
+    }
+
+    if (/photosynthesis|respiration|cell|biology|life/i.test(lower)) {
+      return `${frustrationPrefix}Here's a visual breakdown of photosynthesis:
+
+\`\`\`viz
+{"type":"bar","title":"Inputs and outputs of photosynthesis (relative amounts)","unit":" units","data":[{"label":"CO2 (input)","value":6},{"label":"H2O (input)","value":6},{"label":"Light energy","value":10},{"label":"Glucose (output)","value":1},{"label":"O2 (output)","value":6}]}
+\`\`\`
+
+The overall equation: **6CO2 + 6H2O + light → C6H12O6 + 6O2**
+
+Light drives the reaction — without it, glucose cannot be made.
+
+**What do you think would happen to the rate of photosynthesis if you doubled the CO2 concentration?**`
+    }
+
+    if (/history|timeline|event|war|independen/i.test(lower)) {
+      return `${frustrationPrefix}Here's a visual timeline of Zimbabwe's key moments:
+
+\`\`\`viz
+{"type":"timeline","title":"Zimbabwe — Key Historical Events","events":[{"year":"1890","label":"BSAC arrives","detail":"British South Africa Company colonises Mashonaland"},{"year":"1923","label":"Self-governing colony","detail":"White minority rule under Britain"},{"year":"1965","label":"UDI declared","detail":"Ian Smith's unilateral declaration"},{"year":"1972","label":"Chimurenga War","detail":"Liberation struggle intensifies"},{"year":"1980","label":"Independence","detail":"Robert Mugabe becomes PM"},{"year":"2017","label":"Change of leadership","detail":"Military transition ends Mugabe era"}]}
+\`\`\`
+
+**Which event do you think had the biggest long-term impact on Zimbabwe — and why?**`
+    }
+
+    if (/force|newton|physics|motion|energy/i.test(lower)) {
+      return `${frustrationPrefix}Here's a comparison of Newton's Three Laws:
+
+\`\`\`viz
+{"type":"comparison","title":"Newton's Three Laws of Motion","labelA":"The Law","labelB":"Real-life example","rows":[{"aspect":"1st Law (Inertia)","a":"An object stays at rest or in uniform motion unless acted on by a net force","b":"A book stays on a table until you push it"},{"aspect":"2nd Law (F = ma)","a":"Force = mass × acceleration; bigger force → bigger acceleration","b":"Kicking a football harder makes it fly faster"},{"aspect":"3rd Law (Action-Reaction)","a":"Every action has an equal and opposite reaction","b":"Rocket exhaust pushes down, rocket goes up"}]}
+\`\`\`
+
+**Can you describe a scenario where all three laws are at play at the same time — like a car braking?**`
+    }
+
+    if (/account|debit|credit|ledger|bookkeeping/i.test(lower)) {
+      return `${frustrationPrefix}Here's a visual breakdown of double-entry bookkeeping:
+
+\`\`\`viz
+{"type":"process","title":"Double-Entry Bookkeeping — Step by Step","steps":[{"step":"Transaction occurs","detail":"e.g. Buy equipment for cash"},{"step":"Identify 2 accounts","detail":"Cash (asset) + Equipment (asset)"},{"step":"Determine effect","detail":"Cash decreases, Equipment increases"},{"step":"Apply the rules","detail":"Asset up = Debit. Asset down = Credit"},{"step":"Record both sides","detail":"Debit Equipment, Credit Cash"},{"step":"Check balance","detail":"Total debits must equal total credits"}]}
+\`\`\`
+
+**Golden rule:** Every transaction touches **two accounts** — and debits must always equal credits.
+
+**Which two accounts would change if a business received cash from a customer?**`
+    }
+
+    // Generic diagram request
+    return `${frustrationPrefix}I can show you a diagram for this! Tell me more specifically what you'd like to see — a process, a comparison, a timeline — and I'll build it for you.
+
+For example:
+- "Show me a flowchart of the water cycle"
+- "Show me how photosynthesis works"
+- "Show me Newton's Laws as a diagram"`
+  }
+
+  // Graph / function plot requests
+  if (/graph|plot|sketch|curve|function|parabola|y\s*=|f\(x\)/i.test(lower)) {
+    if (/quadratic|parabola|x²|x\^2/i.test(lower)) {
+      return `${frustrationPrefix}Here's a graph comparing a basic quadratic to a linear function:
+
+\`\`\`graph
+{"functions":["x^2","x+2","-x^2+4"],"xRange":[-4,4],"title":"Quadratic curves vs a straight line","labels":["y = x² (opens up)","y = x + 2 (linear)","y = -x² + 4 (opens down)"]}
+\`\`\`
+
+Notice:
+- When **a > 0** (like y = x²), the parabola opens **upward**
+- When **a < 0** (like y = −x² + 4), it opens **downward**
+- The **vertex** is the turning point — the lowest or highest point
+
+**What is the value of *a* in your equation, and which way will your parabola open?**`
+    }
+
+    if (/linear|straight line|gradient|slope|y\s*=\s*mx/i.test(lower)) {
+      return `${frustrationPrefix}Here are some straight lines with different gradients:
+
+\`\`\`graph
+{"functions":["2*x+1","x-2","-x+3","0.5*x"],"xRange":[-5,5],"title":"Straight lines — comparing gradients","labels":["y = 2x + 1","y = x − 2","y = −x + 3","y = 0.5x"]}
+\`\`\`
+
+Notice:
+- The **steeper** the line, the larger the gradient (m)
+- A **negative** gradient means the line slopes downward
+- Where the line **crosses the y-axis** is the y-intercept (c)
+
+**In your equation y = mx + c, what are the values of m and c?**`
+    }
+
+    if (/trig|sin|cos|tan|wave/i.test(lower)) {
+      return `${frustrationPrefix}Here are the three trigonometric functions:
+
+\`\`\`graph
+{"functions":["sin(x)","cos(x)","tan(x)"],"xRange":[-6.3,6.3],"yRange":[-2,2],"title":"Trigonometric functions","labels":["y = sin(x)","y = cos(x)","y = tan(x)"]}
+\`\`\`
+
+Notice:
+- sin and cos both **oscillate between −1 and +1**
+- cos is just sin **shifted left by 90°**
+- tan has **asymptotes** (undefined values) where cos = 0
+
+**What do you notice about where sin(x) = 0 and where cos(x) = 0?**`
+    }
+
+    // Generic graph request
+    return `${frustrationPrefix}I can plot that for you! Tell me the function(s) you'd like to see — for example:
+- "Graph y = x² − 3x + 2"
+- "Plot y = 2x + 1 and y = x²"
+- "Show me sin(x)"
+
+What function are we working with?`
   }
 
   // ── Level 1: One guiding question ─────────────────────────────
@@ -481,7 +620,7 @@ function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrat
       return `${frustrationPrefix}Before we work through this — **what do you think the numbers inside the brackets of a circle equation might represent?**`
     }
     if (/quadratic|x²|parabola/i.test(lower)) {
-      return `${frustrationPrefix}Interesting — **what do you notice about the structure of a quadratic equation? What are the three parts it always has?**`
+      return `${frustrationPrefix}Good topic. Before we dive in — **what do you notice about the structure of a quadratic equation? What are its three parts?**`
     }
     if (/force|newton|motion/i.test(lower)) {
       return `${frustrationPrefix}Let's start here: **when you push a stationary object and it starts moving, what do you think is causing that change?**`
@@ -490,7 +629,7 @@ function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrat
       return `${frustrationPrefix}Good topic. **In a T-account, do you know which side debits go on — left or right?**`
     }
     if (/essay|paragraph|thesis/i.test(lower)) {
-      return `${frustrationPrefix}Before we plan the essay — **in one sentence, what is the ONE main point you want this essay to argue?**`
+      return `${frustrationPrefix}Before we plan the essay — **in one sentence, what is the ONE main point you want to argue?**`
     }
     if (turnCount === 0) {
       return `${frustrationPrefix}Let's start at the beginning. **Can you tell me, in your own words, what this topic or question is asking you to do?**`
@@ -501,44 +640,78 @@ function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrat
   // ── Level 2: Stepping-stone hint ──────────────────────────────
   if (level === 2) {
     if (/circle|equation.*circle/i.test(lower)) {
-      return `${frustrationPrefix}Here's a key piece: in a circle equation like **(x − h)² + (y − k)² = r²**, the values *h* and *k* inside the brackets give you the **centre** of the circle, and *r²* gives you the radius.\n\n**Now look at your equation — can you pick out what h and k are?**`
+      return `${frustrationPrefix}Here's a key piece: in **(x − h)² + (y − k)² = r²**, the values *h* and *k* give you the **centre**, and *r²* gives the radius.\n\n**Can you pick out h and k from your equation?**`
     }
     if (/quadratic|x²/i.test(lower)) {
-      return `${frustrationPrefix}One useful thing to know: in **y = ax² + bx + c**, the sign of *a* tells you if the parabola opens upward (positive) or downward (negative).\n\n**What is the value of *a* in your equation, and what does that tell you about the shape?**`
+      return `${frustrationPrefix}One useful thing to know: in **y = ax² + bx + c**, the sign of *a* tells you if the parabola opens upward (positive) or downward (negative).\n\nWould you like me to **graph it** so you can see the shape? Just say "yes, graph it" — or tell me the value of *a* first.`
     }
     if (/account|debit|credit/i.test(lower)) {
-      return `${frustrationPrefix}Quick reminder: **debits always go on the LEFT side of a T-account, credits on the RIGHT**. Assets increase on the debit side; liabilities increase on the credit side.\n\n**Now, which account are you working with, and does it increase or decrease with your transaction?**`
+      return `${frustrationPrefix}Quick reminder: **debits always go on the LEFT, credits on the RIGHT**. Assets increase on the debit side; liabilities increase on the credit side.\n\n**Which account are you working with, and does it increase or decrease?**`
     }
     if (turnCount === 0) {
-      return `${frustrationPrefix}Here's a starting hint: **break the problem into what you're *given* and what you're *asked to find*.** List those two things out — don't solve yet.\n\n**What does the question give you, and what does it want?**`
+      return `${frustrationPrefix}Here's a starting hint: **break the problem into what you're *given* and what you're *asked to find*.**\n\n**What does the question give you, and what does it want?**`
     }
-    return `${frustrationPrefix}Let me give you one stepping stone: **the key technique here is to look at the relationship between the two values before doing any calculation.**\n\n**Can you describe what you see when you compare them?**`
+    return `${frustrationPrefix}Let me give you one stepping stone: **look at the relationship between the two values before doing any calculation.**\n\n**Can you describe what you see when you compare them?**`
   }
 
-  // ── Level 3: Worked example with different numbers ─────────────
+  // ── Level 3: Worked example ────────────────────────────────────
   if (level === 3) {
-    if (/circle|equation.*circle/i.test(lower)) {
-      return `${frustrationPrefix}Let me show you how this works with a different example:\n\n**Example:** Find the centre and radius of *(x − 3)² + (y + 1)² = 25*\n\n**Step 1:** The equation form is *(x − h)² + (y − k)² = r²*\n**Step 2:** Compare: h = **3**, k = **−1** (note the sign flip — the bracket says +1, so k = −1)\n**Step 3:** r² = 25, so r = **5**\n**Answer:** Centre = (3, −1), Radius = 5\n\nNotice how the sign inside the bracket flips when you read off the centre.\n\n**Now apply those exact steps to your equation. What do you get?**`
-    }
     if (/quadratic|x²/i.test(lower)) {
-      return `${frustrationPrefix}Let me work through a similar one:\n\n**Example:** Factorise x² + 7x + 12\n\n**Step 1:** Find two numbers that *multiply* to 12 and *add* to 7\n**Step 2:** 3 × 4 = 12 ✓ and 3 + 4 = 7 ✓\n**Step 3:** So x² + 7x + 12 = **(x + 3)(x + 4)**\n\nThe trick is always: multiply to the constant, add to the middle coefficient.\n\n**Now try that method on your quadratic. What two numbers do you need?**`
-    }
-    if (/account|debit|credit/i.test(lower)) {
-      return `${frustrationPrefix}Here's a worked example using a different transaction:\n\n**Example:** A business receives $500 cash for services rendered.\n\n| Account | Debit | Credit |\n|---|---|---|\n| Cash (Asset ↑) | 500 | |\n| Service Revenue | | 500 |\n\n*Cash increases → debit. Revenue earned → credit.*\n\n**Now set up the T-accounts for your transaction the same way. What increases and what does it affect?**`
-    }
-    return `${frustrationPrefix}Let me show you a worked example of a similar problem:\n\n**Example problem (different numbers):**\nIf x + 3 = 7, find x.\n**Step 1:** Isolate x — subtract 3 from both sides\n**Step 2:** x = 7 − 3 = **4**\n\nThe method: whatever operation is applied to x, do the *inverse* on both sides.\n\n**Now apply that same method to your problem. What's the first step?**`
-  }
+      return `${frustrationPrefix}Here's a graph and a worked example together:
 
-  // ── Level 4: Full explanation + new practice problem ───────────
-  if (level === 4) {
+\`\`\`graph
+{"functions":["x^2-5*x+6"],"xRange":[-1,6],"title":"y = x² − 5x + 6","labels":["y = x² − 5x + 6 (our example)"]}
+\`\`\`
+
+See how it crosses the x-axis at x = 2 and x = 3? Those are the **roots** — the solutions.
+
+**Worked example:** Factorise x² − 5x + 6
+- Find two numbers that **multiply to 6** and **add to −5**
+- That's −2 and −3: (−2) × (−3) = 6 ✓ and (−2) + (−3) = −5 ✓
+- So x² − 5x + 6 = **(x − 2)(x − 3)**
+
+**Now try your equation using the same method. What two numbers do you need?**`
+    }
     if (/circle|equation.*circle/i.test(lower)) {
-      return `${frustrationPrefix}Let me explain this completely.\n\nA **circle equation** in standard form is: **(x − h)² + (y − k)² = r²**\n\n- **(h, k)** is the **centre** of the circle\n- **r** is the **radius** (square root of the number on the right)\n- The signs *flip*: if the equation says *(x − 5)*, the x-coordinate of the centre is **+5**; if it says *(x + 2)*, the centre is at **−2**\n\nThis works because the equation measures the distance from any point on the circle to the centre.\n\n---\n\n**Now your turn — new practice problem:**\nFind the centre and radius of: **(x + 4)² + (y − 6)² = 49**\n\nWork through it and tell me your answer.`
+      return `${frustrationPrefix}Let me show you with a different example:\n\n**Example:** Find the centre and radius of *(x − 3)² + (y + 1)² = 25*\n\n**Step 1:** Compare to *(x − h)² + (y − k)² = r²*\n**Step 2:** h = **3**, k = **−1** (sign flips!)\n**Step 3:** r² = 25, so r = **5**\n**Answer:** Centre (3, −1), Radius 5\n\n**Now apply those steps to your equation.**`
     }
     if (/account|debit|credit/i.test(lower)) {
-      return `${frustrationPrefix}Here is the complete picture for double-entry bookkeeping.\n\nEvery transaction affects **two accounts**. The rule is:\n- **Assets and Expenses** → increase on the **DEBIT (left)** side\n- **Liabilities, Equity, and Revenue** → increase on the **CREDIT (right)** side\n- Total debits must always **equal** total credits\n\nTo record any transaction: identify the two accounts affected, decide which increases and which decreases, then apply the rule above.\n\n---\n\n**New practice problem:**\nA business pays $200 cash to buy office supplies.\n- Which two accounts are affected?\n- Which is debited and which is credited?\n\nWrite out the T-account entries and tell me your answer.`
+      return `${frustrationPrefix}Here's a worked example:\n\n**Example:** A business receives $500 cash for services.\n\n| Account | Debit | Credit |\n|---|---|---|\n| Cash (Asset ↑) | 500 | |\n| Service Revenue | | 500 |\n\n*Cash increases → debit. Revenue earned → credit.*\n\n**Now set up the T-accounts for your transaction.**`
     }
-    return `${frustrationPrefix}Let me give you the full explanation.\n\nWhen solving this type of problem, the method is always:\n1. **Identify** what you're given and what you need to find\n2. **Choose** the right formula or rule that links them\n3. **Substitute** your values carefully\n4. **Check** your answer makes sense in context\n\nThe key insight you need here is to look at the relationship between the quantities — one is always expressed in terms of the other.\n\n---\n\n**New practice problem to try:**\nIf a car travels at 60 km/h for 2.5 hours, how far does it travel?\n\nWork through the four steps above and show me your working.`
+    return `${frustrationPrefix}Let me show you a worked example:\n\nIf x + 3 = 7, find x.\n**Step 1:** Isolate x — subtract 3 from both sides\n**Step 2:** x = 7 − 3 = **4**\n\nThe method: do the **inverse operation** to both sides.\n\n**Now apply that to your problem. What's the first step?**`
   }
 
-  return `${frustrationPrefix}**What part of this problem would you like to start with?**`
+  // ── Level 4: Full explanation ──────────────────────────────────
+  if (level === 4) {
+    if (/quadratic|x²/i.test(lower)) {
+      return `${frustrationPrefix}Let me give you the full picture — with a graph.
+
+\`\`\`graph
+{"functions":["x^2-4","x^2-4*x+3","-x^2+1"],"xRange":[-4,5],"title":"Three quadratics — roots are where they cross x-axis","labels":["y = x²−4","y = x²−4x+3","y = −x²+1"]}
+\`\`\`
+
+**How to solve any quadratic ax² + bx + c = 0:**
+
+**Method 1 — Factorising** (quickest when it works):
+Find two numbers that multiply to *c* and add to *b*.
+
+**Method 2 — Quadratic Formula** (always works):
+x = (−b ± √(b² − 4ac)) ÷ 2a
+
+**Method 3 — Completing the Square:**
+Rewrite as (x + p)² = q, then take square roots.
+
+---
+
+**New practice problem:**
+Solve x² − 5x + 6 = 0 using factorising.
+Show your working and tell me the two values of x.`
+    }
+    if (/account|debit|credit/i.test(lower)) {
+      return `${frustrationPrefix}Here is the complete picture for double-entry bookkeeping.\n\nEvery transaction affects **two accounts**:\n- **Assets / Expenses** → increase on the **DEBIT (left)** side\n- **Liabilities / Equity / Revenue** → increase on the **CREDIT (right)** side\n- Total debits must always **equal** total credits\n\n---\n\n**New practice problem:**\nA business pays $200 cash to buy office supplies.\n- Which two accounts are affected?\n- Which is debited and which is credited?\n\nWrite out the T-account entries.`
+    }
+    return `${frustrationPrefix}Let me give you the full explanation.\n\nWhen solving this type of problem:\n1. **Identify** what you're given and what you need to find\n2. **Choose** the right formula or rule\n3. **Substitute** your values carefully\n4. **Check** your answer makes sense\n\n---\n\n**New practice problem:**\nA car travels at 60 km/h for 2.5 hours. How far does it travel?\n\nWork through the four steps and show me your working.`
+  }
+
+  return `${frustrationPrefix}**What part of this would you like to start with?**`
 }
