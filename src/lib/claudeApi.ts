@@ -49,7 +49,7 @@ export async function streamCompletion(
     const demoLevel = levelMatch ? (parseInt(levelMatch[1]) as 1 | 2 | 3 | 4) : 1
     const frustMatch = systemPrompt.match(/frustration=(true|false)/)
     const demoFrustrated = frustMatch?.[1] === 'true'
-    const demoResponse = getDemoResponse(messages, demoLevel, demoFrustrated)
+    const demoResponse = getDemoResponse(messages, demoLevel, demoFrustrated, systemPrompt)
     let i = 0
     const interval = setInterval(() => {
       if (i < demoResponse.length) {
@@ -479,7 +479,7 @@ function getTopicFromHistory(messages: Message[]): string {
   return 'general'
 }
 
-function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrated = false): string {
+function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrated = false, systemPrompt = ''): string {
   const userMsg = messages[messages.length - 1]?.content || ''
   const lower = userMsg.toLowerCase()
   const turnCount = messages.filter(m => m.role === 'assistant').length
@@ -493,7 +493,39 @@ function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrat
 
   // ── Greeting ──────────────────────────────────────────────────
   if (turnCount === 0 && /^(hello|hi|hey|good (morning|afternoon|evening))/i.test(lower)) {
-    return "Hey! I'm Compass — your study companion. I won't just hand you answers, but I *will* walk through everything with you until it clicks.\n\n**What are you working on?**"
+    const nameMatch = systemPrompt.match(/\[META:[^\]]*name=([^\]\s\]]+)/)
+    const name = nameMatch?.[1] && nameMatch[1] !== 'Student' ? nameMatch[1] : null
+    const greeting = name ? `Hey ${name}!` : 'Hey there!'
+    return `${greeting} I'm Compass — really glad you're here. Think of me as a study buddy who loves figuring things out together. Whatever you're working on, we'll break it down step by step until it actually makes sense.\n\n**So, what are we diving into today?**`
+  }
+
+  // ── First message (not a greeting) — respond warmly to topic ──
+  if (turnCount === 0) {
+    const nameMatch = systemPrompt.match(/\[META:[^\]]*name=([^\]\s\]]+)/)
+    const name = nameMatch?.[1] && nameMatch[1] !== 'Student' ? nameMatch[1] : null
+    const opener = name ? `Great, ${name}!` : 'Great topic!'
+    if (/triangle|area|perimeter|geometry|rectangle|polygon/i.test(lower) || topic === 'geometry') {
+      return `${opener} Let's figure this out together. **What information does your question give you — do you have the base and height, or something else?**`
+    }
+    if (/quadratic|parabola|x\^?2|factoris/i.test(lower) || topic === 'quadratic') {
+      return `${opener} Quadratics are fascinating once you see the pattern. **First — can you tell me the equation you're working with?**`
+    }
+    if (/pythagoras|hypotenuse|right.angle/i.test(lower) || topic === 'pythagoras') {
+      return `${opener} Pythagoras is really satisfying once it clicks. **Which sides of the triangle does your question give you?**`
+    }
+    if (/fraction|ratio|proportion/i.test(lower) || topic === 'fractions') {
+      return `${opener} **What exactly does the question ask you to do — simplify, add, subtract, or something else?**`
+    }
+    if (/force|newton|motion|velocity/i.test(lower) || topic === 'physics') {
+      return `${opener} **What values does the question give you, and what does it ask you to find?**`
+    }
+    if (/account|debit|credit/i.test(lower) || topic === 'accounting') {
+      return `${opener} Bookkeeping is very logical once you know the rules. **Which transaction are you trying to record?**`
+    }
+    if (/essay|paragraph|thesis/i.test(lower) || topic === 'english') {
+      return `${opener} **What's the essay question asking you to argue or discuss?**`
+    }
+    return `${opener} Let's work through it together. **Can you share the question or problem you're looking at?**`
   }
 
   // ── Visualization requests (handled at any level) ─────────────

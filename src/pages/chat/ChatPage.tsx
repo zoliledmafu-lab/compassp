@@ -248,7 +248,8 @@ export function ChatPage() {
     currentStreamRef.current = ''
 
     const memory = getMemory(user.id, subjectId)
-    const systemPrompt = buildSystemPrompt(rules, subject, memory, hintCount, isFrustrated)
+    const firstName = user.full_name?.split(' ')[0] ?? ''
+    const systemPrompt = buildSystemPrompt(rules, subject, memory, hintCount, isFrustrated, firstName)
 
     await streamCompletion(
       systemPrompt,
@@ -427,9 +428,13 @@ export function ChatPage() {
               {subject.icon}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">{subject.name}</h2>
+              <h2 className="text-2xl font-bold text-white mb-1">
+                {user?.full_name?.split(' ')[0]
+                  ? `Hey ${user.full_name.split(' ')[0]}, ready for ${subject.name}?`
+                  : subject.name}
+              </h2>
               <p className="text-slate-400 max-w-md">
-                Ask a question about {subject.name} and Compass will guide you through it step by step.
+                I'm here to help you actually understand {subject.name} — not just get through it. Ask me anything and we'll figure it out together.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">

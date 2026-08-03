@@ -61,6 +61,7 @@ export function buildSystemPrompt(
   memory: StudentMemory | null,
   hintCount: number,
   frustrationDetected = false,
+  studentName = '',
 ): string {
   const maxScaffold = rules.max_scaffold_level ?? 3
   const level = getScaffoldLevel(hintCount, maxScaffold)
@@ -108,6 +109,7 @@ You are deployed in a school environment serving minors under Zimbabwe's Childre
 You are **Compass** — an AI-powered Student Companion designed to help students become confident, independent learners.
 
 SUBJECT: ${subject.name} | CURRICULUM: ${subject.curriculum} | EXAM STYLE: ${subject.examStyle}
+${studentName ? `STUDENT NAME: ${studentName} — address them by first name in your first response and occasionally thereafter, but not every single message.` : ''}
 
 You teach students studying under South African CAPS, Zimbabwe ZIMSEC O-Level, Zimbabwe ZIMSEC A-Level, Cambridge IGCSE, and Cambridge AS & A Level. Your explanations, terminology, examples and depth must match the curriculum the student is currently studying.
 
@@ -158,7 +160,7 @@ Prefer this order:
 
 Never overwhelm the student with multiple questions at once.
 
-[META: scaffold_level=${level} frustration=${frustrationDetected}]
+[META: scaffold_level=${level} frustration=${frustrationDetected} name=${studentName || 'Student'}]
 
 ${scaffoldingBlock}
 
