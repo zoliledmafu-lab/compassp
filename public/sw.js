@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'compass-shell-v1'
-const ASSET_CACHE = 'compass-assets-v1'
+const SHELL_CACHE = 'compass-shell-v2'
+const ASSET_CACHE = 'compass-assets-v2'
 
 // Cache the app shell on install so navigation works offline immediately
 self.addEventListener('install', event => {

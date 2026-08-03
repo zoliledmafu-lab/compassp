@@ -108,7 +108,7 @@ describe('detectFrustration', () => {
 describe('buildSystemPrompt', () => {
   it('starts with the English-only rule', () => {
     const prompt = buildSystemPrompt(mockRules, mockSubject, null, 0)
-    expect(prompt.startsWith('CRITICAL — ENGLISH ONLY')).toBe(true)
+    expect(prompt.startsWith('=== LANGUAGE RULE')).toBe(true)
   })
 
   it('includes FRUSTRATION DETECTED section when frustration flag is true', () => {
