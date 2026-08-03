@@ -467,7 +467,7 @@ function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrat
 
   // ── Frustration acknowledgement (prepended when detected) ─────
   const frustrationPrefix = frustrated
-    ? "Ndinzwisisa kuti zvinoda nguva — ita simba. Vanhu vakawanda vakapfuura pane zviri kukuvadza. Ngatiite zvishoma zvishoma.\n\n"
+    ? "I can hear this is getting tough — that's completely normal. Let's slow right down and go one step at a time.\n\n"
     : ''
 
   // ── Greeting ──────────────────────────────────────────────────
