@@ -42,7 +42,13 @@ export function detectDirectAnswerAttempt(message: string): boolean {
 export function detectFrustration(message: string, recentUserMessages: string[]): boolean {
   if (detectDirectAnswerAttempt(message)) return true
   const wordCount = message.trim().split(/\s+/).filter(w => w.length > 0).length
-  if (wordCount < 5) return true
+  if (wordCount < 5) {
+    // Short math/science answers are active engagement, not frustration
+    // e.g. "1/2 x height", "F = ma", "x equals 5", "base times height"
+    const isMathAnswer = /[\d\/\*\+\-\=\^]|half|base|height|area|length|radius|angle|perimeter|mass|force|velocity|acceleration|sin|cos|tan|sqrt|pi|delta|alpha|beta|mole|gram/i.test(message)
+    if (isMathAnswer) return false
+    return true
+  }
   const norm = message.toLowerCase().trim()
   return recentUserMessages.some(m => m.toLowerCase().trim() === norm)
 }

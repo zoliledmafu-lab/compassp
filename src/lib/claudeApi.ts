@@ -460,10 +460,31 @@ function extractDemoInsights(subjectName: string, transcript: string): SessionIn
   return { topics: foundTopics.slice(0, 5), strengths, struggles, summary }
 }
 
+// Scan full conversation history for the dominant topic so fallbacks stay relevant
+function getTopicFromHistory(messages: Message[]): string {
+  const allText = messages.map(m => m.content).join(' ').toLowerCase()
+  if (/triangle|area of|perimeter|polygon|geometry|rectangle|square|circle area|sector/i.test(allText)) return 'geometry'
+  if (/quadratic|parabola|x\s*\^?\s*2|factoris|factori[sz]/i.test(allText)) return 'quadratic'
+  if (/circle\s*(equation|theorem)|radius|circumference|diameter/i.test(allText)) return 'circle'
+  if (/fraction|denominator|numerator|simplif|ratio|proportion/i.test(allText)) return 'fractions'
+  if (/pythagoras|hypotenuse|right.angle|right.triangle/i.test(allText)) return 'pythagoras'
+  if (/linear|gradient|slope|y\s*=\s*mx|straight line/i.test(allText)) return 'linear'
+  if (/force|newton|motion|velocity|acceleration|momentum/i.test(allText)) return 'physics'
+  if (/photosynthesis|respiration|cell|biology|dna|genetics/i.test(allText)) return 'biology'
+  if (/account|debit|credit|ledger|balance sheet/i.test(allText)) return 'accounting'
+  if (/history|timeline|war|independence|revolution|colonial/i.test(allText)) return 'history'
+  if (/essay|paragraph|thesis|argument|narrative|comprehension/i.test(allText)) return 'english'
+  if (/equation|algebra|solve|expression|expand|simplify/i.test(allText)) return 'algebra'
+  if (/probability|statistic|mean|median|mode|sample|data/i.test(allText)) return 'statistics'
+  return 'general'
+}
+
 function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrated = false): string {
   const userMsg = messages[messages.length - 1]?.content || ''
   const lower = userMsg.toLowerCase()
   const turnCount = messages.filter(m => m.role === 'assistant').length
+  // Look at full history to keep fallbacks on-topic even when the latest message is short
+  const topic = getTopicFromHistory(messages)
 
   // ── Frustration acknowledgement ───────────────────────────────
   const frustrationPrefix = frustrated
@@ -616,19 +637,28 @@ What function are we working with?`
 
   // ── Level 1: One guiding question ─────────────────────────────
   if (level === 1) {
-    if (/circle|equation.*circle|x.*².*y.*²/i.test(lower)) {
+    if (/circle|equation.*circle|x.*².*y.*²/i.test(lower) || topic === 'circle') {
       return `${frustrationPrefix}Before we work through this — **what do you think the numbers inside the brackets of a circle equation might represent?**`
     }
-    if (/quadratic|x²|parabola/i.test(lower)) {
+    if (/quadratic|x²|parabola/i.test(lower) || topic === 'quadratic') {
       return `${frustrationPrefix}Good topic. Before we dive in — **what do you notice about the structure of a quadratic equation? What are its three parts?**`
     }
-    if (/force|newton|motion/i.test(lower)) {
+    if (/triangle|area|perimeter|geometry|rectangle|polygon/i.test(lower) || topic === 'geometry') {
+      return `${frustrationPrefix}Good starting point. **What information do you think you need to find the area of a triangle — what measurements matter?**`
+    }
+    if (/pythagoras|hypotenuse|right.angle/i.test(lower) || topic === 'pythagoras') {
+      return `${frustrationPrefix}Let's think this through — **in a right-angled triangle, which side is always the longest? Do you know what it's called?**`
+    }
+    if (/fraction|ratio|proportion/i.test(lower) || topic === 'fractions') {
+      return `${frustrationPrefix}Before we calculate — **when you simplify a fraction, what are you actually doing to both the top and the bottom?**`
+    }
+    if (/force|newton|motion/i.test(lower) || topic === 'physics') {
       return `${frustrationPrefix}Let's start here: **when you push a stationary object and it starts moving, what do you think is causing that change?**`
     }
-    if (/account|debit|credit|ledger/i.test(lower)) {
+    if (/account|debit|credit|ledger/i.test(lower) || topic === 'accounting') {
       return `${frustrationPrefix}Good topic. **In a T-account, do you know which side debits go on — left or right?**`
     }
-    if (/essay|paragraph|thesis/i.test(lower)) {
+    if (/essay|paragraph|thesis/i.test(lower) || topic === 'english') {
       return `${frustrationPrefix}Before we plan the essay — **in one sentence, what is the ONE main point you want to argue?**`
     }
     if (turnCount === 0) {
@@ -639,24 +669,43 @@ What function are we working with?`
 
   // ── Level 2: Stepping-stone hint ──────────────────────────────
   if (level === 2) {
-    if (/circle|equation.*circle/i.test(lower)) {
+    if (/circle|equation.*circle/i.test(lower) || topic === 'circle') {
       return `${frustrationPrefix}Here's a key piece: in **(x − h)² + (y − k)² = r²**, the values *h* and *k* give you the **centre**, and *r²* gives the radius.\n\n**Can you pick out h and k from your equation?**`
     }
-    if (/quadratic|x²/i.test(lower)) {
+    if (/quadratic|x²/i.test(lower) || topic === 'quadratic') {
       return `${frustrationPrefix}One useful thing to know: in **y = ax² + bx + c**, the sign of *a* tells you if the parabola opens upward (positive) or downward (negative).\n\nWould you like me to **graph it** so you can see the shape? Just say "yes, graph it" — or tell me the value of *a* first.`
     }
-    if (/account|debit|credit/i.test(lower)) {
+    if (/triangle|area|perimeter|geometry/i.test(lower) || topic === 'geometry') {
+      return `${frustrationPrefix}You're on the right track. The formula for the area of a triangle has **three parts**: ½, the base, and the height.\n\n**You gave me two of those — which one is still missing from your answer?**`
+    }
+    if (/pythagoras|hypotenuse/i.test(lower) || topic === 'pythagoras') {
+      return `${frustrationPrefix}Here's the key: in Pythagoras' theorem, **a² + b² = c²**, where *c* is always the hypotenuse.\n\n**Can you label which sides in your triangle are *a*, *b*, and *c*?**`
+    }
+    if (/account|debit|credit/i.test(lower) || topic === 'accounting') {
       return `${frustrationPrefix}Quick reminder: **debits always go on the LEFT, credits on the RIGHT**. Assets increase on the debit side; liabilities increase on the credit side.\n\n**Which account are you working with, and does it increase or decrease?**`
+    }
+    if (/fraction|ratio/i.test(lower) || topic === 'fractions') {
+      return `${frustrationPrefix}One useful rule: to simplify a fraction, divide both the numerator and denominator by their **HCF** (highest common factor).\n\n**What is the HCF of your two numbers?**`
     }
     if (turnCount === 0) {
       return `${frustrationPrefix}Here's a starting hint: **break the problem into what you're *given* and what you're *asked to find*.**\n\n**What does the question give you, and what does it want?**`
     }
-    return `${frustrationPrefix}Let me give you one stepping stone: **look at the relationship between the two values before doing any calculation.**\n\n**Can you describe what you see when you compare them?**`
+    // Fallback: use topic context to stay relevant
+    const topicHint: Record<string, string> = {
+      algebra:    'In algebra, the key move is usually to **isolate the unknown** by doing the same operation to both sides.\n\n**What operation could you apply to both sides here?**',
+      statistics: 'Remember: **mean** adds all values and divides by count, **median** is the middle value when sorted, **mode** is the most frequent.\n\n**Which measure does your question ask for?**',
+      physics:    'In physics problems, always start by **listing what you know** (given values) and **what you need** (the unknown).\n\n**What values does the question give you?**',
+      biology:    'Try breaking this down: **what is the input, and what is the output of this process?**\n\n**What does the question say happens first?**',
+      history:    'Historians look at **cause**, **event**, and **consequence**.\n\n**For this event — what do you think triggered it?**',
+      english:    'A strong paragraph has a **point**, **evidence**, and **explanation** (PEE).\n\n**Which part of PEE are you working on?**',
+      general:    'A good strategy: **write down what you know** and **what you\'re trying to find** before calculating anything.\n\n**What does the question give you?**',
+    }
+    return `${frustrationPrefix}${topicHint[topic] ?? topicHint.general}`
   }
 
   // ── Level 3: Worked example ────────────────────────────────────
   if (level === 3) {
-    if (/quadratic|x²/i.test(lower)) {
+    if (/quadratic|x²/i.test(lower) || topic === 'quadratic') {
       return `${frustrationPrefix}Here's a graph and a worked example together:
 
 \`\`\`graph
@@ -672,18 +721,41 @@ See how it crosses the x-axis at x = 2 and x = 3? Those are the **roots** — th
 
 **Now try your equation using the same method. What two numbers do you need?**`
     }
-    if (/circle|equation.*circle/i.test(lower)) {
+    if (/circle|equation.*circle/i.test(lower) || topic === 'circle') {
       return `${frustrationPrefix}Let me show you with a different example:\n\n**Example:** Find the centre and radius of *(x − 3)² + (y + 1)² = 25*\n\n**Step 1:** Compare to *(x − h)² + (y − k)² = r²*\n**Step 2:** h = **3**, k = **−1** (sign flips!)\n**Step 3:** r² = 25, so r = **5**\n**Answer:** Centre (3, −1), Radius 5\n\n**Now apply those steps to your equation.**`
     }
-    if (/account|debit|credit/i.test(lower)) {
+    if (/triangle|area|geometry/i.test(lower) || topic === 'geometry') {
+      return `${frustrationPrefix}Let me show you with different numbers:
+
+**Worked example:** A triangle has a base of 8 cm and a height of 5 cm. Find its area.
+
+**Step 1:** Write the formula → Area = ½ × base × height
+**Step 2:** Substitute → Area = ½ × 8 × 5
+**Step 3:** Calculate → Area = ½ × 40 = **20 cm²**
+
+The unit must be **squared** (cm²) because area is always 2D.
+
+**Now apply the same steps to your triangle. What values do you have for the base and height?**`
+    }
+    if (/pythagoras|hypotenuse/i.test(lower) || topic === 'pythagoras') {
+      return `${frustrationPrefix}Let me walk through a similar example:\n\n**Example:** A right triangle has legs of 3 cm and 4 cm. Find the hypotenuse.\n\n**Step 1:** a² + b² = c² → 3² + 4² = c²\n**Step 2:** 9 + 16 = c²\n**Step 3:** c² = 25, so c = √25 = **5 cm**\n\n**Now try your triangle. Which sides do you know?**`
+    }
+    if (/account|debit|credit/i.test(lower) || topic === 'accounting') {
       return `${frustrationPrefix}Here's a worked example:\n\n**Example:** A business receives $500 cash for services.\n\n| Account | Debit | Credit |\n|---|---|---|\n| Cash (Asset ↑) | 500 | |\n| Service Revenue | | 500 |\n\n*Cash increases → debit. Revenue earned → credit.*\n\n**Now set up the T-accounts for your transaction.**`
     }
-    return `${frustrationPrefix}Let me show you a worked example:\n\nIf x + 3 = 7, find x.\n**Step 1:** Isolate x — subtract 3 from both sides\n**Step 2:** x = 7 − 3 = **4**\n\nThe method: do the **inverse operation** to both sides.\n\n**Now apply that to your problem. What's the first step?**`
+    if (topic === 'algebra') {
+      return `${frustrationPrefix}Let me show you a similar example:\n\nSolve **2x + 4 = 14**\n\n**Step 1:** Subtract 4 from both sides → 2x = 10\n**Step 2:** Divide both sides by 2 → x = **5**\n\nThe key: **whatever you do to one side, you must do to the other.**\n\n**Now apply those steps to your equation. What's your first move?**`
+    }
+    if (topic === 'fractions') {
+      return `${frustrationPrefix}Here's a worked example:\n\nSimplify **12/18**\n\n**Step 1:** Find the HCF of 12 and 18 → HCF = 6\n**Step 2:** Divide top and bottom by 6 → 12÷6 = 2, 18÷6 = 3\n**Answer:** **2/3**\n\n**Now apply the same steps to your fraction.**`
+    }
+    // Generic fallback — but topic-aware
+    return `${frustrationPrefix}Let me show you the method with a simple example first:\n\n**Example:** Suppose the problem gives you two pieces of information and asks you to find a third.\n\n1. **Write down what you know**\n2. **Choose the formula or rule that links them**\n3. **Substitute your values in**\n4. **Solve and check your units**\n\n**On ${topic === 'general' ? 'your problem' : `this ${topic} question`} — what two pieces of information does the question give you?**`
   }
 
   // ── Level 4: Full explanation ──────────────────────────────────
   if (level === 4) {
-    if (/quadratic|x²/i.test(lower)) {
+    if (/quadratic|x²/i.test(lower) || topic === 'quadratic') {
       return `${frustrationPrefix}Let me give you the full picture — with a graph.
 
 \`\`\`graph
@@ -707,10 +779,39 @@ Rewrite as (x + p)² = q, then take square roots.
 Solve x² − 5x + 6 = 0 using factorising.
 Show your working and tell me the two values of x.`
     }
-    if (/account|debit|credit/i.test(lower)) {
+    if (/triangle|area|geometry/i.test(lower) || topic === 'geometry') {
+      return `${frustrationPrefix}Here's the complete picture for triangle area.
+
+**The formula:** Area = ½ × base × height
+
+The **height must be perpendicular** (at 90°) to the base — not the slant side.
+
+\`\`\`viz
+{"type":"process","title":"Finding the area of a triangle","steps":[{"step":"Identify the base","detail":"Any side can be the base"},{"step":"Find the height","detail":"Must be perpendicular (90°) to the base"},{"step":"Apply the formula","detail":"Area = ½ × base × height"},{"step":"Write the unit","detail":"Area is always in squared units (cm², m²)"}]}
+\`\`\`
+
+**New practice problem:**
+A triangle has a base of 10 cm and a perpendicular height of 7 cm.
+Calculate its area. Show every step.`
+    }
+    if (/pythagoras|hypotenuse/i.test(lower) || topic === 'pythagoras') {
+      return `${frustrationPrefix}Here is the full Pythagoras method:\n\n**Theorem:** In any right-angled triangle, **a² + b² = c²** where c is the hypotenuse.\n\n**Finding the hypotenuse:** c = √(a² + b²)\n**Finding a shorter side:** a = √(c² − b²)\n\n---\n\n**New practice problem:**\nA ladder 10 m long leans against a wall. Its base is 6 m from the wall. How high up the wall does it reach?\n\nDraw a diagram first, then show your working.`
+    }
+    if (/account|debit|credit/i.test(lower) || topic === 'accounting') {
       return `${frustrationPrefix}Here is the complete picture for double-entry bookkeeping.\n\nEvery transaction affects **two accounts**:\n- **Assets / Expenses** → increase on the **DEBIT (left)** side\n- **Liabilities / Equity / Revenue** → increase on the **CREDIT (right)** side\n- Total debits must always **equal** total credits\n\n---\n\n**New practice problem:**\nA business pays $200 cash to buy office supplies.\n- Which two accounts are affected?\n- Which is debited and which is credited?\n\nWrite out the T-account entries.`
     }
-    return `${frustrationPrefix}Let me give you the full explanation.\n\nWhen solving this type of problem:\n1. **Identify** what you're given and what you need to find\n2. **Choose** the right formula or rule\n3. **Substitute** your values carefully\n4. **Check** your answer makes sense\n\n---\n\n**New practice problem:**\nA car travels at 60 km/h for 2.5 hours. How far does it travel?\n\nWork through the four steps and show me your working.`
+    // Generic level 4 — still topic-aware
+    const topicExample: Record<string, string> = {
+      algebra: 'Solve **3x − 7 = 14** step by step. Show every operation you perform on both sides.',
+      statistics: 'A class scored: 45, 62, 78, 54, 78, 90, 62, 78. Find the mean, median, and mode.',
+      fractions: 'Calculate **3/4 + 5/6**. Show how you find a common denominator.',
+      physics: 'A car accelerates from rest to 20 m/s in 5 seconds. Calculate the acceleration and the distance covered.',
+      biology: 'Describe the four stages of mitosis (PMAT) and what happens to the chromosomes at each stage.',
+      history: 'Explain ONE cause and ONE consequence of the event you have been studying.',
+      english: 'Write a PEE paragraph arguing that education is the most powerful tool for change.',
+      general: 'Look at your original problem — write out what you know, what you need to find, and which formula or method links them.',
+    }
+    return `${frustrationPrefix}Let me give you the complete explanation.\n\nWhen tackling any problem like this:\n1. **Identify** what you're given and what you need\n2. **Choose** the right formula or method\n3. **Substitute** values carefully\n4. **Check** your answer makes sense (right size? right units?)\n\n---\n\n**New practice problem:**\n${topicExample[topic] ?? topicExample.general}`
   }
 
   return `${frustrationPrefix}**What part of this would you like to start with?**`
