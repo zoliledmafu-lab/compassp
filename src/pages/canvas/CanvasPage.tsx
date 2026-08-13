@@ -432,62 +432,67 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
 
         {/* ── Canvas area ───────────────────────────────── */}
         <div className="flex-1 relative">
-          {/* Toolbar */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 glass-dark rounded-2xl px-3 py-2 shadow-xl">
-            <ToolBtn icon={<Plus size={16} />} label="Text" onClick={addTextNode} color="indigo" tourId="text-btn" />
-            <ToolBtn icon={<Image size={16} />} label="Image" onClick={() => addImageNode()} color="cyan" />
-            {/* Widget picker */}
-            <div className="relative" ref={widgetRef} data-tour="widget-btn">
-              <ToolBtn
-                icon={<BarChart2 size={16} />}
-                label="Widget"
-                onClick={() => setWidgetMenuOpen(o => !o)}
-                active={widgetMenuOpen}
-                color="purple"
-              />
-              {widgetMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 w-60 glass-dark rounded-2xl shadow-2xl border border-white/10 z-50 py-2">
-                  {(() => {
-                    const subjectPlugins = getPluginsForSubject(subjectId)
-                    if (subjectPlugins.length === 0) return (
-                      <p className="px-3 py-2 text-xs text-slate-500">No widgets for this subject yet.</p>
-                    )
-                    return subjectPlugins.map(p => (
-                      <button
-                        key={p.id}
-                        onClick={() => { addWidgetNode(p.id); setWidgetMenuOpen(false) }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-all text-left"
-                      >
-                        <span className="text-slate-400 shrink-0">{getWidgetIcon(p.id)}</span>
-                        <div>
-                          <div className="font-medium text-xs">{p.name}</div>
-                          <div className="text-slate-500 text-xs leading-tight">{p.description.substring(0, 52)}…</div>
-                        </div>
-                      </button>
-                    ))
-                  })()}
-                </div>
-              )}
-            </div>
-            <div className="w-px h-6 bg-white/10" />
-            <SubjectSelector subjectId={subjectId} onChange={onSubjectChange} />
-            <div className="w-px h-6 bg-white/10" />
-            <div className="flex items-center gap-2" data-tour="quiz-btns">
-              <ToolBtn icon={<Sparkles size={16} />} label="Quiz Me" onClick={() => openPanel('quiz')} active={panelMode === 'quiz'} color="amber" />
-              <ToolBtn icon={<Clock size={16} />} label="Exam" onClick={() => openPanel('exam')} active={panelMode === 'exam'} color="cyan" />
-            </div>
-            <div className="w-px h-6 bg-white/10" />
-            <ToolBtn icon={<List size={16} />} label="List" onClick={() => openPanel('list')} active={panelMode === 'list'} color="slate" />
-            <div className="w-px h-6 bg-white/10" />
-            <div className="flex items-center" data-tour="zoom-btns">
-              <button onClick={() => zoomOut({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom out"><ZoomOut size={15} /></button>
-              <button onClick={() => zoomIn({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom in"><ZoomIn size={15} /></button>
-              <button onClick={() => fitView({ padding: 0.12, duration: 400 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Fit view"><Maximize2 size={15} /></button>
+          {/* Toolbar — scrollable on mobile */}
+          <div
+            className="absolute top-3 left-1/2 -translate-x-1/2 z-10 overflow-x-auto"
+            style={{ maxWidth: 'calc(100vw - 16px)', scrollbarWidth: 'none' }}
+          >
+            <div className="flex items-center gap-1.5 glass-dark rounded-2xl px-2.5 py-1.5 shadow-xl min-w-max">
+              <ToolBtn icon={<Plus size={15} />} label="Text" onClick={addTextNode} color="indigo" tourId="text-btn" />
+              <ToolBtn icon={<Image size={15} />} label="Image" onClick={() => addImageNode()} color="cyan" />
+              {/* Widget picker */}
+              <div className="relative" ref={widgetRef} data-tour="widget-btn">
+                <ToolBtn
+                  icon={<BarChart2 size={15} />}
+                  label="Widget"
+                  onClick={() => setWidgetMenuOpen(o => !o)}
+                  active={widgetMenuOpen}
+                  color="purple"
+                />
+                {widgetMenuOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-56 glass-dark rounded-2xl shadow-2xl border border-white/10 z-50 py-2">
+                    {(() => {
+                      const subjectPlugins = getPluginsForSubject(subjectId)
+                      if (subjectPlugins.length === 0) return (
+                        <p className="px-3 py-2 text-xs text-slate-500">No widgets for this subject yet.</p>
+                      )
+                      return subjectPlugins.map(p => (
+                        <button
+                          key={p.id}
+                          onClick={() => { addWidgetNode(p.id); setWidgetMenuOpen(false) }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-all text-left"
+                        >
+                          <span className="text-slate-400 shrink-0">{getWidgetIcon(p.id)}</span>
+                          <div>
+                            <div className="font-medium text-xs">{p.name}</div>
+                            <div className="text-slate-500 text-xs leading-tight">{p.description.substring(0, 52)}…</div>
+                          </div>
+                        </button>
+                      ))
+                    })()}
+                  </div>
+                )}
+              </div>
+              <div className="w-px h-5 bg-white/10 shrink-0" />
+              <SubjectSelector subjectId={subjectId} onChange={onSubjectChange} />
+              <div className="w-px h-5 bg-white/10 shrink-0" />
+              <div className="flex items-center gap-1" data-tour="quiz-btns">
+                <ToolBtn icon={<Sparkles size={15} />} label="Quiz Me" onClick={() => openPanel('quiz')} active={panelMode === 'quiz'} color="amber" />
+                <ToolBtn icon={<Clock size={15} />} label="Exam" onClick={() => openPanel('exam')} active={panelMode === 'exam'} color="cyan" />
+              </div>
+              <div className="w-px h-5 bg-white/10 shrink-0" />
+              <ToolBtn icon={<List size={15} />} label="List" onClick={() => openPanel('list')} active={panelMode === 'list'} color="slate" />
+              <div className="w-px h-5 bg-white/10 shrink-0" />
+              <div className="flex items-center" data-tour="zoom-btns">
+                <button onClick={() => zoomOut({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom out"><ZoomOut size={14} /></button>
+                <button onClick={() => zoomIn({ duration: 200 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Zoom in"><ZoomIn size={14} /></button>
+                <button onClick={() => fitView({ padding: 0.12, duration: 400 })} className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all" title="Fit view"><Maximize2 size={14} /></button>
+              </div>
             </div>
           </div>
 
           {/* Node count badge */}
-          <div className="absolute top-4 right-4 z-10 text-xs text-slate-500 glass rounded-xl px-2.5 py-1.5">
+          <div className="absolute top-3 right-3 z-10 text-xs text-slate-500 glass rounded-xl px-2.5 py-1.5">
             {nodes.length} node{nodes.length !== 1 ? 's' : ''}
           </div>
 
@@ -502,7 +507,7 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
             onDrop={onDrop}
             onMoveEnd={(_, vp) => setViewport(vp)}
             defaultViewport={viewport}
-            minZoom={0.2}
+            minZoom={0.15}
             maxZoom={3}
             fitViewOptions={{ padding: 0.12 }}
             proOptions={{ hideAttribution: true }}
@@ -510,6 +515,9 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
             deleteKeyCode="Delete"
             selectionKeyCode="Shift"
             multiSelectionKeyCode="Shift"
+            panOnScroll={false}
+            zoomOnPinch={true}
+            panOnDrag={true}
           >
             <Background
               variant={BackgroundVariant.Dots}
@@ -555,10 +563,10 @@ function CanvasInner({ subjectId, onSubjectChange }: { subjectId: string; onSubj
           )}
         </div>
 
-        {/* ── Right panel ──────────────────────────────── */}
+        {/* ── Right panel: full-screen on mobile, side panel on desktop ── */}
         {panelOpen && (
           <div
-            className="w-[380px] glass-dark border-l border-white/8 flex flex-col shrink-0 overflow-hidden animate-in slide-in-from-right duration-200"
+            className="fixed inset-0 z-40 md:static md:z-auto md:w-[380px] md:inset-auto glass-dark border-white/8 md:border-l flex flex-col shrink-0 overflow-hidden"
             style={{ animation: 'slideInRight 0.2s ease-out' }}
           >
             {panelMode === 'branch' && activeBranchId && (

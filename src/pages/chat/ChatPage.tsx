@@ -355,38 +355,38 @@ export function ChatPage() {
   // ── Render ────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col pb-16 md:pb-0" style={{ height: '100dvh' }}>
       {/* Header */}
-      <header className="glass-dark border-b border-white/8 px-4 py-3 flex items-center gap-3 shrink-0">
+      <header className="glass-dark border-b border-white/8 px-3 md:px-4 py-2.5 md:py-3 flex items-center gap-2 shrink-0">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <button
             onClick={() => setShowSubjectPicker(s => !s)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl glass hover:bg-white/10 transition-all text-sm font-medium"
+            className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 rounded-xl glass hover:bg-white/10 transition-all text-sm font-medium min-w-0"
           >
-            <span className="text-lg">{subject.icon}</span>
-            <span className="text-white">{subject.name}</span>
-            <ChevronDown size={14} className="text-slate-400" />
+            <span className="text-base md:text-lg shrink-0">{subject.icon}</span>
+            <span className="text-white truncate max-w-[120px] md:max-w-none">{subject.name}</span>
+            <ChevronDown size={13} className="text-slate-400 shrink-0" />
           </button>
           <ScaffoldIndicator hintCount={hintCount} maxScaffoldLevel={rules.max_scaffold_level ?? 3} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setVoiceEnabled(v => !v)}
             className={`p-2 rounded-xl transition-all ${voiceEnabled ? 'text-indigo-400 bg-indigo-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
             title={voiceEnabled ? 'Mute voice' : 'Enable voice'}
           >
-            {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            {voiceEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
           </button>
           {voiceEnabled && (
             <button
               onClick={() => setVoiceGender(g => g === 'female' ? 'male' : 'female')}
-              className="px-2 py-1 rounded-lg text-xs glass text-slate-300 hover:text-white transition-all"
+              className="hidden sm:flex px-2 py-1 rounded-lg text-xs glass text-slate-300 hover:text-white transition-all"
             >
-              {voiceGender === 'female' ? '♀ Female' : '♂ Male'}
+              {voiceGender === 'female' ? '♀ F' : '♂ M'}
             </button>
           )}
           <button onClick={clearChat} className="p-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all" title="Clear chat">
-            <RefreshCw size={16} />
+            <RefreshCw size={15} />
           </button>
         </div>
       </header>
@@ -421,15 +421,15 @@ export function ChatPage() {
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-3 md:px-4 py-4 md:py-6 space-y-4 md:space-y-6">
         {/* Empty state */}
         {messages.length === 0 && !streaming && (
-          <div className="flex flex-col items-center justify-center h-full text-center gap-6 py-16">
-            <div className="w-20 h-20 gradient-primary rounded-3xl flex items-center justify-center glow text-4xl">
+          <div className="flex flex-col items-center justify-center h-full text-center gap-4 md:gap-6 py-8 md:py-16">
+            <div className="w-16 h-16 md:w-20 md:h-20 gradient-primary rounded-3xl flex items-center justify-center glow text-3xl md:text-4xl">
               {subject.icon}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">
+              <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
                 {user?.full_name?.split(' ')[0]
                   ? `Hey ${user.full_name.split(' ')[0]}, ready for ${subject.name}?`
                   : subject.name}
@@ -490,48 +490,51 @@ export function ChatPage() {
       )}
 
       {/* Input bar */}
-      <div className="glass-dark border-t border-white/8 px-4 py-3 shrink-0">
-        <div className="flex items-end gap-3 max-w-4xl mx-auto">
+      <div
+        className="glass-dark border-t border-white/8 px-3 md:px-4 py-2.5 md:py-3 shrink-0"
+        style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom, 10px))' }}
+      >
+        <div className="flex items-end gap-2 md:gap-3 max-w-4xl mx-auto">
           <button
             onClick={() => setShowUpload(s => !s)}
-            className={`p-2.5 rounded-xl transition-all mb-0.5 ${showUpload ? 'text-indigo-400 bg-indigo-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+            className={`p-2.5 rounded-xl transition-all mb-0.5 shrink-0 ${showUpload ? 'text-indigo-400 bg-indigo-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
             title="Upload file"
           >
             <Paperclip size={18} />
           </button>
-          <div className="flex-1 glass rounded-2xl flex items-end gap-2 px-4 py-2.5">
+          <div className="flex-1 glass rounded-2xl flex items-end gap-2 px-3 md:px-4 py-2.5">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={e => {
                 setInput(e.target.value)
                 e.target.style.height = 'auto'
-                e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px'
+                e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px'
               }}
               onKeyDown={handleKeyDown}
-              placeholder={`Ask about ${subject.name}… (Shift+Enter for new line)`}
-              className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-500 resize-none focus:outline-none min-h-[24px] max-h-[200px] leading-relaxed"
+              placeholder={`Ask about ${subject.name}…`}
+              className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-500 resize-none focus:outline-none min-h-[24px] max-h-[160px] leading-relaxed"
               rows={1}
               disabled={streaming}
             />
             <button
               onClick={listening ? stopListening : startListening}
-              className={`p-1.5 rounded-lg transition-all shrink-0 ${listening ? 'text-red-400 animate-pulse' : 'text-slate-500 hover:text-white'}`}
+              className={`p-2 rounded-lg transition-all shrink-0 ${listening ? 'text-red-400 animate-pulse' : 'text-slate-500 hover:text-white'}`}
               title="Voice input"
             >
-              {listening ? <MicOff size={16} /> : <Mic size={16} />}
+              {listening ? <MicOff size={17} /> : <Mic size={17} />}
             </button>
           </div>
           <Button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || streaming}
             loading={streaming}
-            className="p-2.5 mb-0.5"
+            className="p-3 mb-0.5 shrink-0"
           >
-            <Send size={18} />
+            <Send size={17} />
           </Button>
         </div>
-        <p className="text-center text-xs text-slate-600 mt-2">
+        <p className="hidden md:block text-center text-xs text-slate-600 mt-2">
           Compass guides you to the answer rather than providing it. That is how lasting understanding is built.
         </p>
       </div>
@@ -598,7 +601,7 @@ function MessageBubble({ message, streaming }: { message: Message; streaming?: b
   const isUser = message.role === 'user'
   return (
     <div className={`flex max-w-4xl mx-auto w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed max-w-[82%] ${
+      <div className={`rounded-2xl px-3.5 md:px-4 py-3 text-sm leading-relaxed max-w-[92%] md:max-w-[82%] ${
         isUser
           ? 'gradient-primary text-white rounded-tr-sm'
           : 'glass text-slate-100 rounded-tl-sm'

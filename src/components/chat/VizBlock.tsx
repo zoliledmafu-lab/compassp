@@ -67,19 +67,20 @@ export function VizBlock({ config }: { config: VizConfig }) {
 
 function VizWrapper({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="my-4">
+    <div className="my-3 md:my-4">
       {title && (
-        <p className="text-center text-xs font-semibold text-slate-300 mb-3 tracking-wide uppercase">
+        <p className="text-center text-xs font-semibold text-slate-300 mb-2 md:mb-3 tracking-wide uppercase leading-snug px-1">
           {title}
         </p>
       )}
-      <div style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '16px',
-        padding: '20px',
-        overflowX: 'auto',
-      }}>
+      <div
+        className="rounded-2xl p-3 md:p-5"
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          overflowX: 'auto',
+        }}
+      >
         {children}
       </div>
     </div>
@@ -99,7 +100,7 @@ function TimelineViz({ config }: { config: VizConfig }) {
 
   return (
     <VizWrapper title={config.title}>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: W, display: 'block', margin: '0 auto' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ minWidth: 360, maxWidth: W, display: 'block', margin: '0 auto' }}>
         <defs>
           <linearGradient id="tl-line" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#6366f1" stopOpacity="0.5" />
@@ -190,7 +191,7 @@ function BarChartViz({ config }: { config: VizConfig }) {
       <svg
         viewBox={`0 0 ${LABEL_W + BAR_W + VAL_W + 20} ${totalH}`}
         width="100%"
-        style={{ maxWidth: LABEL_W + BAR_W + VAL_W + 20, display: 'block', margin: '0 auto' }}
+        style={{ minWidth: 360, maxWidth: LABEL_W + BAR_W + VAL_W + 20, display: 'block', margin: '0 auto' }}
       >
         <defs>
           {data.map((_, i) => (
@@ -326,7 +327,7 @@ function PieChartViz({ config }: { config: VizConfig }) {
 
   return (
     <VizWrapper title={config.title}>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: W, display: 'block', margin: '0 auto' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ minWidth: 300, maxWidth: W, display: 'block', margin: '0 auto' }}>
         <defs>
           <filter id="pie-glow">
             <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.35" />
@@ -346,6 +347,8 @@ function PieChartViz({ config }: { config: VizConfig }) {
               fillOpacity={mounted ? 1 : 0}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
+              onTouchStart={() => setHovered(i)}
+              onTouchEnd={() => setHovered(null)}
               style={{
                 cursor: 'pointer',
                 filter: isHov ? `url(#pie-glow) drop-shadow(0 0 8px ${s.color}88)` : 'none',
@@ -403,7 +406,8 @@ function ProcessViz({ config }: { config: VizConfig }) {
 
   const steps: ProcessStep[] = rawSteps.map(s => typeof s === 'string' ? { step: s } : s)
 
-  const PER_ROW = Math.min(steps.length, 4)
+  const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 500
+  const PER_ROW = isMobileScreen ? Math.min(steps.length, 2) : Math.min(steps.length, 4)
   const rows: ProcessStep[][] = []
   for (let i = 0; i < steps.length; i += PER_ROW) rows.push(steps.slice(i, i + PER_ROW))
 
@@ -482,7 +486,7 @@ function ComparisonViz({ config }: { config: VizConfig }) {
   return (
     <VizWrapper title={config.title}>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+        <table style={{ width: '100%', minWidth: '400px', borderCollapse: 'collapse', fontSize: '12px' }}>
           <thead>
             <tr>
               <th style={{ padding: '8px 12px', textAlign: 'left', color: '#64748b', fontWeight: 500, width: '25%' }}>

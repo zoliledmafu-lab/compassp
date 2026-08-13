@@ -124,11 +124,18 @@ export function FunctionPlot({ config }: { config: PlotConfig }) {
     ? config.functions.map(fn => evalFn(fn, hoverMathX, liveParams))
     : []
 
+  const clientXToSvgX = (clientX: number, rect: DOMRect) => {
+    const svgX = ((clientX - rect.left) / rect.width) * W
+    return Math.max(PAD_L, Math.min(W - PAD_R, svgX))
+  }
+
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const svgX = ((e.clientX - rect.left) / rect.width) * W
-    const clamped = Math.max(PAD_L, Math.min(W - PAD_R, svgX))
-    setHoverSvgX(clamped)
+    setHoverSvgX(clientXToSvgX(e.clientX, e.currentTarget.getBoundingClientRect()))
+  }
+
+  const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (e.touches.length !== 1) return
+    setHoverSvgX(clientXToSvgX(e.touches[0].clientX, e.currentTarget.getBoundingClientRect()))
   }
 
   // Tooltip: flip to left side when near right edge
@@ -144,15 +151,17 @@ export function FunctionPlot({ config }: { config: PlotConfig }) {
       )}
 
       <div
-        className="rounded-xl border border-white/8 overflow-hidden"
+        className="rounded-xl border border-white/8 overflow-x-auto"
         style={{ background: 'rgba(255,255,255,0.03)' }}
       >
         <svg
           viewBox={`0 0 ${W} ${H}`}
           width="100%"
-          style={{ maxWidth: W, display: 'block', margin: '0 auto', cursor: 'crosshair' }}
+          style={{ minWidth: 280, maxWidth: W, display: 'block', margin: '0 auto', cursor: 'crosshair', touchAction: 'none' }}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoverSvgX(null)}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={() => setHoverSvgX(null)}
         >
           {/* Clip */}
           <clipPath id="fp-clip">
