@@ -468,6 +468,7 @@ function getTopicFromHistory(messages: Message[]): string {
   if (/circle\s*(equation|theorem)|radius|circumference|diameter/i.test(allText)) return 'circle'
   if (/fraction|denominator|numerator|simplif|ratio|proportion/i.test(allText)) return 'fractions'
   if (/pythagoras|hypotenuse|right.angle|right.triangle/i.test(allText)) return 'pythagoras'
+  if (/linear.?program|decision.?variable|feasible.?region|objective.?function|processing.?time.*machine|machine.*processing.?time|maximis.*combined|minimis.*combined|maximis.*unit|minimis.*cost.*constraint/i.test(allText)) return 'lp'
   if (/linear|gradient|slope|y\s*=\s*mx|straight line/i.test(allText)) return 'linear'
   if (/force|newton|motion|velocity|acceleration|momentum/i.test(allText)) return 'physics'
   if (/photosynthesis|respiration|cell|biology|dna|genetics/i.test(allText)) return 'biology'
@@ -677,6 +678,16 @@ The two essential formulas:
 **What caused the shift in your question — a change in supply, demand, or both?**`
     }
 
+    if ((inMaths || inGeography || inEconomics || noSubject) && /linear.?prog|decision.?variable|feasible|objective.?function|constraint.*inequal/i.test(lower)) {
+      return `${frustrationPrefix}Here's the step-by-step process for any linear programming problem:
+
+\`\`\`viz
+{"type":"process","title":"Linear Programming — Method","steps":[{"step":"Define decision variables","detail":"Name what you control: x = units of X, y = units of Y"},{"step":"Write the objective function","detail":"What to maximise or minimise — e.g. Maximise x + y"},{"step":"Write all constraints","detail":"Turn each resource limit into an inequality: 50x + 24y ≤ 2400"},{"step":"Add non-negativity constraints","detail":"x ≥ 0, y ≥ 0 (you can't produce negative units)"},{"step":"Find the feasible region","detail":"Graph the inequalities; the shaded region satisfies all constraints"},{"step":"Test the corner points","detail":"Substitute each vertex of the feasible region into the objective function"},{"step":"State the optimal solution","detail":"The corner point giving the highest (or lowest) value is the answer"}]}
+\`\`\`
+
+**Which step are you currently stuck on?**`
+    }
+
     // Generic diagram request — subject-specific examples
     const vizExamples = inMaths
       ? '- A **step-by-step process** (e.g. "how to solve a quadratic")?\n- A **comparison** (e.g. "fractions vs decimals")?\n- A **formula or graph** (e.g. "show me the circle area formula")?\n- A **timeline** isn\'t really a maths thing — but a process flowchart might be!'
@@ -764,6 +775,18 @@ What function are we working with?`
     if (/quadratic|x²|parabola/i.test(lower) || topic === 'quadratic') {
       return `${frustrationPrefix}Good topic. Before we dive in — **what do you notice about the structure of a quadratic equation? What are its three parts?**`
     }
+    if (/linear.?prog|maximis|minimis|decision.?variable|feasible|objective.?function|processing.?time.*machine|machine.*processing/i.test(lower) || topic === 'lp') {
+      return `${frustrationPrefix}Good topic to tackle! In any linear programming problem, you need two things before writing a single equation:
+
+1. **Decision variables** — the quantities you are *choosing* to control
+2. **Constraints** — the limits that restrict your choices
+
+In your problem, the company decides how many units of X and Y to *produce* each week.
+
+So we write: **x = units of X produced**, **y = units of Y produced**
+
+Now — **looking at the question, what limits are placed on x and y?** Try listing as many as you can find.`
+    }
     if (/triangle|area|perimeter|geometry|rectangle|polygon/i.test(lower) || topic === 'geometry') {
       return `${frustrationPrefix}Good starting point. **What information do you think you need to find the area of a triangle — what measurements matter?**`
     }
@@ -802,6 +825,20 @@ What function are we working with?`
     if (/pythagoras|hypotenuse/i.test(lower) || topic === 'pythagoras') {
       return `${frustrationPrefix}Here's the key: in Pythagoras' theorem, **a² + b² = c²**, where *c* is always the hypotenuse.\n\n**Can you label which sides in your triangle are *a*, *b*, and *c*?**`
     }
+    if (/linear.?prog|maximis|minimis|machine.*processing|processing.*machine|constraint/i.test(lower) || topic === 'lp') {
+      return `${frustrationPrefix}Here's the key idea: **every resource limit becomes an inequality constraint**.
+
+Machine A has **2 400 minutes** available (40 hrs × 60). X uses 50 min, Y uses 24 min per unit:
+
+> **50x + 24y ≤ 2 400** ← Machine A constraint
+
+There's also a demand constraint: the company needs to supply at least 75 units of X. It already has 30 in stock, so it only needs to *produce* at least 45 more:
+
+> **x ≥ 45** (since 30 in stock + x produced ≥ 75 demand)
+
+**Your turn:** Machine B has 35 hours (= 2 100 minutes). X uses 30 min, Y uses 33 min.
+**Can you write the Machine B constraint?**`
+    }
     if (/account|debit|credit/i.test(lower) || topic === 'accounting') {
       return `${frustrationPrefix}Quick reminder: **debits always go on the LEFT, credits on the RIGHT**. Assets increase on the debit side; liabilities increase on the credit side.\n\n**Which account are you working with, and does it increase or decrease?**`
     }
@@ -813,6 +850,7 @@ What function are we working with?`
     }
     // Fallback: use topic context to stay relevant
     const topicHint: Record<string, string> = {
+      lp:         'In LP, every resource limit becomes a **constraint inequality**. Machine A has 2 400 minutes (40 hrs × 60). X uses 50 min, Y uses 24 min → **50x + 24y ≤ 2 400**.\n\n**Can you write the Machine B constraint the same way?**',
       algebra:    'In algebra, the key move is usually to **isolate the unknown** by doing the same operation to both sides.\n\n**What operation could you apply to both sides here?**',
       statistics: 'Remember: **mean** adds all values and divides by count, **median** is the middle value when sorted, **mode** is the most frequent.\n\n**Which measure does your question ask for?**',
       physics:    'In physics problems, always start by **listing what you know** (given values) and **what you need** (the unknown).\n\n**What values does the question give you?**',
@@ -875,6 +913,34 @@ Now try one yourself:
     if (/pythagoras|hypotenuse/i.test(lower) || topic === 'pythagoras') {
       return `${frustrationPrefix}Let me walk through a similar example:\n\n**Example:** A right triangle has legs of 3 cm and 4 cm. Find the hypotenuse.\n\n**Step 1:** a² + b² = c² → 3² + 4² = c²\n**Step 2:** 9 + 16 = c²\n**Step 3:** c² = 25, so c = √25 = **5 cm**\n\n**Now try your triangle. Which sides do you know?**`
     }
+    if (/linear.?prog|maximis|minimis|machine.*processing|processing.*machine|constraint/i.test(lower) || topic === 'lp') {
+      return `${frustrationPrefix}Let me show you the full setup for your problem:
+
+**Step 1 — Decision variables**
+x = units of X produced this week
+y = units of Y produced this week
+
+**Step 2 — Constraints** (turn each resource limit into an inequality)
+
+| Resource | Limit | Constraint |
+|---|---|---|
+| Machine A | 40 hrs = 2 400 min | 50x + 24y ≤ 2 400 |
+| Machine B | 35 hrs = 2 100 min | 30x + 33y ≤ 2 100 |
+| X demand | need 75 total; 30 in stock | x ≥ 45 |
+| Y demand | need 95 total; 90 in stock | y ≥ 5 |
+| Non-negativity | can't produce negatives | x ≥ 0, y ≥ 0 |
+
+**Step 3 — Objective function**
+End-of-week stock = (30 + x − 75) + (90 + y − 95) = x + y − 50
+
+Maximising (x + y − 50) is the same as maximising: **Maximise x + y**
+
+\`\`\`viz
+{"type":"process","title":"LP — 3 steps to the setup","steps":[{"step":"Decision variables","detail":"x = units of X produced, y = units of Y produced"},{"step":"Constraints as inequalities","detail":"50x + 24y ≤ 2400 | 30x + 33y ≤ 2100 | x ≥ 45 | y ≥ 5"},{"step":"Objective function","detail":"Maximise x + y (end stock = x + y − 50)"}]}
+\`\`\`
+
+**Now you have all the constraints written — can you identify which constraint is most likely to be the *binding* one (the one that actually limits you most)?**`
+    }
     if (/account|debit|credit/i.test(lower) || topic === 'accounting') {
       return `${frustrationPrefix}Here's a worked example:\n\n**Example:** A business receives $500 cash for services.\n\n| Account | Debit | Credit |\n|---|---|---|\n| Cash (Asset ↑) | 500 | |\n| Service Revenue | | 500 |\n\n*Cash increases → debit. Revenue earned → credit.*\n\n**Now set up the T-accounts for your transaction.**`
     }
@@ -934,11 +1000,54 @@ The **height must be perpendicular** (at 90°) to the base — not the slant sid
     if (/pythagoras|hypotenuse/i.test(lower) || topic === 'pythagoras') {
       return `${frustrationPrefix}Here is the full Pythagoras method:\n\n**Theorem:** In any right-angled triangle, **a² + b² = c²** where c is the hypotenuse.\n\n**Finding the hypotenuse:** c = √(a² + b²)\n**Finding a shorter side:** a = √(c² − b²)\n\n---\n\n**New practice problem:**\nA ladder 10 m long leans against a wall. Its base is 6 m from the wall. How high up the wall does it reach?\n\nDraw a diagram first, then show your working.`
     }
+    if (/linear.?prog|maximis|minimis|machine.*processing|processing.*machine|constraint/i.test(lower) || topic === 'lp') {
+      return `${frustrationPrefix}Here is the complete worked solution for your problem.
+
+---
+
+**Step 1 — Decision variables**
+x = units of X produced this week
+y = units of Y produced this week
+
+**Step 2 — Objective function**
+End stock = (30 + x − 75) + (90 + y − 95) = x + y − 50
+→ **Maximise x + y**
+
+**Step 3 — Constraints**
+
+\`\`\`viz
+{"type":"comparison","title":"All constraints","labelA":"Constraint","labelB":"Why it exists","rows":[{"aspect":"50x + 24y ≤ 2 400","a":"Machine A capacity (40 hrs × 60 = 2 400 min)","b":"Can't use more time than available"},{"aspect":"30x + 33y ≤ 2 100","a":"Machine B capacity (35 hrs × 60 = 2 100 min)","b":"Can't use more time than available"},{"aspect":"x ≥ 45","a":"Must meet X demand: 30 + x ≥ 75","b":"30 units in stock; need 75 total"},{"aspect":"y ≥ 5","a":"Must meet Y demand: 90 + y ≥ 95","b":"90 units in stock; need 95 total"},{"aspect":"x ≥ 0, y ≥ 0","a":"Non-negativity","b":"Can't produce negative units"}]}
+\`\`\`
+
+**Step 4 — Find the corner points of the feasible region**
+
+The feasible region is bounded by x ≥ 45, y ≥ 5, and the two machine lines. Test the corners:
+
+| Corner point | Machine A: 50x+24y | Machine B: 30x+33y | Objective: x+y |
+|---|---|---|---|
+| (45, 5) | 2 370 ≤ 2 400 ✓ | 1 515 ≤ 2 100 ✓ | **50** |
+| (45, 22.7) | 2 399 ≤ 2 400 ✓ | 1 700 ≤ 2 100 ✓ | **67.7** |
+| (31, 35.4) | 2 399 ≤ 2 400 ✓ | 2 099 ≤ 2 100 ✓ | **66.4** |
+
+*Point (45, 22.7) is where the Machine A line meets x = 45.*
+
+**Step 5 — Optimal solution**
+Produce **45 units of X** and **22 units of Y** (rounding to whole units).
+
+End-of-week stock = (30 + 45 − 75) + (90 + 22 − 95) = 0 + 17 = **17 units total**
+
+\`\`\`quiz
+{"type":"mcq","question":"In a maximisation LP problem, the optimal solution is always found at…","options":["The centre of the feasible region","A corner (vertex) of the feasible region","The point where the objective function equals zero","The midpoint of the longest constraint line"],"answer":1,"explanation":"By the fundamental theorem of LP, the optimal value of the objective function (if it exists) always occurs at a corner point (vertex) of the feasible region. This is why we only need to test corner points — not every point inside."}
+\`\`\`
+
+**Now try this:** What would happen to the optimal solution if Machine A's available time increased to 45 hours?`
+    }
     if (/account|debit|credit/i.test(lower) || topic === 'accounting') {
       return `${frustrationPrefix}Here is the complete picture for double-entry bookkeeping.\n\nEvery transaction affects **two accounts**:\n- **Assets / Expenses** → increase on the **DEBIT (left)** side\n- **Liabilities / Equity / Revenue** → increase on the **CREDIT (right)** side\n- Total debits must always **equal** total credits\n\n---\n\n**New practice problem:**\nA business pays $200 cash to buy office supplies.\n- Which two accounts are affected?\n- Which is debited and which is credited?\n\nWrite out the T-account entries.`
     }
     // Generic level 4 — still topic-aware
     const topicExample: Record<string, string> = {
+      lp:      'Write all the constraints for your LP problem as inequalities, then state the objective function you are maximising or minimising.',
       algebra: 'Solve **3x − 7 = 14** step by step. Show every operation you perform on both sides.',
       statistics: 'A class scored: 45, 62, 78, 54, 78, 90, 62, 78. Find the mean, median, and mode.',
       fractions: 'Calculate **3/4 + 5/6**. Show how you find a common denominator.',
