@@ -602,13 +602,75 @@ Light drives the reaction — without it, glucose cannot be made.
 **Which two accounts would change if a business received cash from a customer?**`
     }
 
-    // Generic diagram request
-    return `${frustrationPrefix}I can show you a diagram for this! Tell me more specifically what you'd like to see — a process, a comparison, a timeline — and I'll build it for you.
+    if (/circle|circumference|radius|diameter|arc|sector/i.test(lower)) {
+      return `${frustrationPrefix}Here are the key circle formulas visualised:
 
-For example:
-- "Show me a flowchart of the water cycle"
-- "Show me how photosynthesis works"
-- "Show me Newton's Laws as a diagram"`
+\`\`\`graph
+{"functions":["pi*x^2","2*pi*x"],"xRange":[0,5],"title":"Circle: Area (πr²) vs Circumference (2πr) as radius grows","labels":["Area = πr²","Circumference = 2πr"]}
+\`\`\`
+
+*Hover to see exact values at any radius.*
+
+The two essential formulas:
+- **Area** = πr² (square units — covers the inside)
+- **Circumference** = 2πr (linear units — goes around the edge)
+
+\`\`\`quiz
+{"type":"mcq","question":"A circle has radius 5 cm. What is its area? (use π ≈ 3.14)","options":["78.5 cm²","31.4 cm²","15.7 cm²","62.8 cm²"],"answer":0,"explanation":"Area = πr² = 3.14 × 5² = 3.14 × 25 = 78.5 cm²"}
+\`\`\`
+
+**What does your question ask you to find — the area, the circumference, or the radius?**`
+    }
+
+    if (/water.?cycle|evaporation|condensation|precipitation/i.test(lower)) {
+      return `${frustrationPrefix}Here's the water cycle as a process:
+
+\`\`\`viz
+{"type":"process","title":"The Water Cycle","steps":[{"step":"Evaporation","detail":"Sun heats water → water vapour rises"},{"step":"Condensation","detail":"Vapour cools → forms clouds"},{"step":"Precipitation","detail":"Water falls as rain or snow"},{"step":"Collection","detail":"Water collects in rivers, lakes, ocean"},{"step":"Repeat","detail":"Cycle begins again"}]}
+\`\`\`
+
+**What do you think provides the energy that drives the entire cycle?**`
+    }
+
+    if (/fraction|ratio|proportion/i.test(lower)) {
+      return `${frustrationPrefix}Here's a comparison of fraction operations:
+
+\`\`\`viz
+{"type":"comparison","title":"Fraction Operations","labelA":"Operation","labelB":"Method","rows":[{"aspect":"Add / Subtract","a":"Find common denominator, then add/subtract numerators","b":"3/4 + 1/6 → 9/12 + 2/12 = 11/12"},{"aspect":"Multiply","a":"Multiply numerators together, denominators together","b":"2/3 × 3/5 = 6/15 = 2/5"},{"aspect":"Divide","a":"Keep the first fraction, flip the second, then multiply","b":"2/3 ÷ 4/5 = 2/3 × 5/4 = 10/12 = 5/6"},{"aspect":"Simplify","a":"Divide top and bottom by their HCF","b":"12/18 ÷ 6 = 2/3"}]}
+\`\`\`
+
+**Which operation does your question involve?**`
+    }
+
+    if (/mitosis|meiosis|cell.?division/i.test(lower)) {
+      return `${frustrationPrefix}Here's a comparison of the two types of cell division:
+
+\`\`\`viz
+{"type":"comparison","title":"Mitosis vs Meiosis","labelA":"Mitosis","labelB":"Meiosis","rows":[{"aspect":"Purpose","a":"Growth and repair","b":"Sexual reproduction"},{"aspect":"Divisions","a":"1 division","b":"2 divisions"},{"aspect":"Daughter cells","a":"2 identical cells","b":"4 genetically unique cells"},{"aspect":"Chromosome number","a":"Same as parent (2n)","b":"Half of parent (n — haploid)"},{"aspect":"Where it occurs","a":"Body (somatic) cells","b":"Reproductive organs"}]}
+\`\`\`
+
+**Can you explain in your own words why meiosis produces cells with half the chromosomes?**`
+    }
+
+    if (/supply|demand|equilibrium|market/i.test(lower)) {
+      return `${frustrationPrefix}Here's a supply and demand summary:
+
+\`\`\`viz
+{"type":"comparison","title":"Supply and Demand Shifts","labelA":"Demand shifts RIGHT (increases)","labelB":"Supply shifts RIGHT (increases)","rows":[{"aspect":"Price effect","a":"Price rises","b":"Price falls"},{"aspect":"Quantity effect","a":"Quantity rises","b":"Quantity rises"},{"aspect":"Typical cause","a":"Income rises, tastes change, population grows","b":"Technology improves, costs fall, more producers enter"}]}
+\`\`\`
+
+**What caused the shift in your question — a change in supply, demand, or both?**`
+    }
+
+    // Generic diagram request
+    return `${frustrationPrefix}I can build a diagram for that! To give you the right one, tell me a bit more — for example:
+
+- Are you looking for a **step-by-step process** (e.g. "how photosynthesis works")?
+- A **comparison** between two things (e.g. "mitosis vs meiosis")?
+- A **timeline** of events?
+- A **formula or graph** (e.g. "show me the circle area formula")?
+
+What specifically would you like to visualise?`
   }
 
   // Graph / function plot requests
