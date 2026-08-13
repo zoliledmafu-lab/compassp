@@ -486,6 +486,21 @@ function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrat
   // Look at full history to keep fallbacks on-topic even when the latest message is short
   const topic = getTopicFromHistory(messages)
 
+  // ── Subject awareness — only show relevant visualizations ────────
+  const subjectMatch = systemPrompt.match(/SUBJECT:\s*([^|]+)/)
+  const currentSubject = subjectMatch ? subjectMatch[1].trim().toLowerCase() : ''
+  const inMaths     = /math|statistic|pure math|further math/i.test(currentSubject)
+  const inPhysics   = /physics|physical science/i.test(currentSubject)
+  const inBiology   = /biology|life science|combined science/i.test(currentSubject)
+  const inChemistry = /chemistry/i.test(currentSubject)
+  const inGeography = /geography|environmental/i.test(currentSubject)
+  const inHistory   = /history/i.test(currentSubject)
+  const inEconomics = /economics|business|commerce/i.test(currentSubject)
+  const inAccounting= /accounting|accounts/i.test(currentSubject)
+  const inEnglish   = /english|language|literature/i.test(currentSubject)
+  // If subject is unknown (no system prompt), allow everything
+  const noSubject   = !currentSubject
+
   // ── Frustration acknowledgement ───────────────────────────────
   const frustrationPrefix = frustrated
     ? "I can hear this is getting tough — that's completely normal. Let's slow right down and go one step at a time.\n\n"
@@ -532,7 +547,7 @@ function getDemoResponse(messages: Message[], level: 1 | 2 | 3 | 4 = 1, frustrat
 
   // Flowchart / diagram requests
   if (/flowchart|diagram|show me|draw|visuali[sz]e|mind.?map|chart/i.test(lower)) {
-    if (/quadratic|x²|parabola|factori[sz]/i.test(lower)) {
+    if ((inMaths || noSubject) && /quadratic|x²|parabola|factori[sz]/i.test(lower)) {
       return `${frustrationPrefix}Here's a flowchart for solving a quadratic equation:
 
 \`\`\`mermaid
@@ -556,7 +571,7 @@ Three paths exist — factorising is fastest when it works, the formula always w
 **Which path do you think applies to your equation?**`
     }
 
-    if (/photosynthesis|respiration|cell|biology|life/i.test(lower)) {
+    if ((inBiology || noSubject) && /photosynthesis|respiration|cell|biology|life/i.test(lower)) {
       return `${frustrationPrefix}Here's a visual breakdown of photosynthesis:
 
 \`\`\`viz
@@ -570,7 +585,7 @@ Light drives the reaction — without it, glucose cannot be made.
 **What do you think would happen to the rate of photosynthesis if you doubled the CO2 concentration?**`
     }
 
-    if (/history|timeline|event|war|independen/i.test(lower)) {
+    if ((inHistory || noSubject) && /history|timeline|event|war|independen/i.test(lower)) {
       return `${frustrationPrefix}Here's a visual timeline of Zimbabwe's key moments:
 
 \`\`\`viz
@@ -580,7 +595,7 @@ Light drives the reaction — without it, glucose cannot be made.
 **Which event do you think had the biggest long-term impact on Zimbabwe — and why?**`
     }
 
-    if (/force|newton|physics|motion|energy/i.test(lower)) {
+    if ((inPhysics || noSubject) && /force|newton|physics|motion|energy/i.test(lower)) {
       return `${frustrationPrefix}Here's a comparison of Newton's Three Laws:
 
 \`\`\`viz
@@ -590,7 +605,7 @@ Light drives the reaction — without it, glucose cannot be made.
 **Can you describe a scenario where all three laws are at play at the same time — like a car braking?**`
     }
 
-    if (/account|debit|credit|ledger|bookkeeping/i.test(lower)) {
+    if ((inAccounting || noSubject) && /account|debit|credit|ledger|bookkeeping/i.test(lower)) {
       return `${frustrationPrefix}Here's a visual breakdown of double-entry bookkeeping:
 
 \`\`\`viz
@@ -602,7 +617,7 @@ Light drives the reaction — without it, glucose cannot be made.
 **Which two accounts would change if a business received cash from a customer?**`
     }
 
-    if (/circle|circumference|radius|diameter|arc|sector/i.test(lower)) {
+    if ((inMaths || noSubject) && /circle|circumference|radius|diameter|arc|sector/i.test(lower)) {
       return `${frustrationPrefix}Here are the key circle formulas visualised:
 
 \`\`\`graph
@@ -622,7 +637,7 @@ The two essential formulas:
 **What does your question ask you to find — the area, the circumference, or the radius?**`
     }
 
-    if (/water.?cycle|evaporation|condensation|precipitation/i.test(lower)) {
+    if ((inBiology || inGeography || noSubject) && /water.?cycle|evaporation|condensation|precipitation/i.test(lower)) {
       return `${frustrationPrefix}Here's the water cycle as a process:
 
 \`\`\`viz
@@ -632,7 +647,7 @@ The two essential formulas:
 **What do you think provides the energy that drives the entire cycle?**`
     }
 
-    if (/fraction|ratio|proportion/i.test(lower)) {
+    if ((inMaths || noSubject) && /fraction|ratio|proportion/i.test(lower)) {
       return `${frustrationPrefix}Here's a comparison of fraction operations:
 
 \`\`\`viz
@@ -642,7 +657,7 @@ The two essential formulas:
 **Which operation does your question involve?**`
     }
 
-    if (/mitosis|meiosis|cell.?division/i.test(lower)) {
+    if ((inBiology || noSubject) && /mitosis|meiosis|cell.?division/i.test(lower)) {
       return `${frustrationPrefix}Here's a comparison of the two types of cell division:
 
 \`\`\`viz
@@ -652,7 +667,7 @@ The two essential formulas:
 **Can you explain in your own words why meiosis produces cells with half the chromosomes?**`
     }
 
-    if (/supply|demand|equilibrium|market/i.test(lower)) {
+    if ((inEconomics || noSubject) && /supply|demand|equilibrium|market/i.test(lower)) {
       return `${frustrationPrefix}Here's a supply and demand summary:
 
 \`\`\`viz
@@ -662,19 +677,31 @@ The two essential formulas:
 **What caused the shift in your question — a change in supply, demand, or both?**`
     }
 
-    // Generic diagram request
+    // Generic diagram request — subject-specific examples
+    const vizExamples = inMaths
+      ? '- A **step-by-step process** (e.g. "how to solve a quadratic")?\n- A **comparison** (e.g. "fractions vs decimals")?\n- A **formula or graph** (e.g. "show me the circle area formula")?\n- A **timeline** isn\'t really a maths thing — but a process flowchart might be!'
+      : inPhysics
+      ? '- A **comparison** (e.g. "Newton\'s three laws side by side")?\n- A **step-by-step process** (e.g. "how to apply F = ma")?\n- A **graph** (e.g. "velocity-time graph")?'
+      : inBiology
+      ? '- A **comparison** (e.g. "mitosis vs meiosis")?\n- A **process** (e.g. "how photosynthesis works")?\n- A **bar chart** of biological data?'
+      : inHistory
+      ? '- A **timeline** of events?\n- A **comparison** (e.g. "causes vs effects of WWI")?\n- A **process** (e.g. "how apartheid was dismantled")?'
+      : inEconomics
+      ? '- A **comparison** (e.g. "supply vs demand shifts")?\n- A **process** (e.g. "how a market reaches equilibrium")?\n- A **bar chart** of economic data?'
+      : inAccounting
+      ? '- A **process** (e.g. "double-entry bookkeeping steps")?\n- A **comparison** (e.g. "debit vs credit rules")?'
+      : inGeography
+      ? '- A **process** (e.g. "the water cycle")?\n- A **timeline** of geographical events?\n- A **comparison** of climate zones?'
+      : '- A **step-by-step process** (e.g. "how photosynthesis works")?\n- A **comparison** between two things (e.g. "mitosis vs meiosis")?\n- A **timeline** of events?\n- A **formula or graph** (e.g. "show me the circle area formula")?'
     return `${frustrationPrefix}I can build a diagram for that! To give you the right one, tell me a bit more — for example:
 
-- Are you looking for a **step-by-step process** (e.g. "how photosynthesis works")?
-- A **comparison** between two things (e.g. "mitosis vs meiosis")?
-- A **timeline** of events?
-- A **formula or graph** (e.g. "show me the circle area formula")?
+${vizExamples}
 
 What specifically would you like to visualise?`
   }
 
   // Graph / function plot requests
-  if (/graph|plot|sketch|curve|function|parabola|y\s*=|f\(x\)/i.test(lower)) {
+  if ((inMaths || noSubject) && /graph|plot|sketch|curve|function|parabola|y\s*=|f\(x\)/i.test(lower)) {
     if (/quadratic|parabola|x²|x\^2/i.test(lower)) {
       return `${frustrationPrefix}Here's a graph comparing a basic quadratic to a linear function:
 
