@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { MermaidDiagram } from '../../components/chat/MermaidDiagram'
 import { FunctionPlot, parseFunctionPlot } from '../../components/chat/FunctionPlot'
 import { VizBlock, parseVizBlock } from '../../components/chat/VizBlock'
+import { QuizCard, parseQuizBlock } from '../../components/chat/QuizCard'
 import {
   Send, Paperclip, Volume2, VolumeX, RefreshCw,
   Lightbulb, BookOpen, ChevronDown, Mic, MicOff, Clock,
@@ -623,6 +624,10 @@ function MessageBubble({ message, streaming }: { message: Message; streaming?: b
                   if (lang === 'viz') {
                     const cfg = parseVizBlock(raw)
                     if (cfg) return <VizBlock config={cfg} />
+                  }
+                  if (lang === 'quiz') {
+                    const cfg = parseQuizBlock(raw)
+                    if (cfg) return <QuizCard config={cfg} />
                   }
                   if (lang === 'svg') {
                     return (

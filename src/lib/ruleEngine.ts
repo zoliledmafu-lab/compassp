@@ -222,7 +222,32 @@ flowchart TD
 {"functions":["x^2","x+2"],"xRange":[-5,5],"title":"Parabola vs straight line","labels":["y = x²","y = x + 2"]}
 \`\`\`
 
-━━━ FORMAT 4: TABLES ━━━
+━━━ FORMAT 4: INLINE PRACTICE QUESTIONS ━━━
+After teaching a concept, embed a quick quiz card using a quiz block.
+This lets the student test understanding immediately and get instant feedback.
+
+TYPE "mcq" — multiple choice (2–4 options):
+\`\`\`quiz
+{"type":"mcq","question":"A triangle has base 6 cm and height 4 cm. What is its area?","options":["12 cm²","24 cm²","10 cm²","8 cm²"],"answer":0,"explanation":"Area = ½ × base × height = ½ × 6 × 4 = 12 cm²"}
+\`\`\`
+
+TYPE "fill" — typed short answer:
+\`\`\`quiz
+{"type":"fill","question":"Complete: Area of a triangle = ½ × _____ × height","answer":"base","hint":"Think about the two measurements you need for a triangle's area."}
+\`\`\`
+
+TYPE "truefalse" — true or false:
+\`\`\`quiz
+{"type":"truefalse","question":"The gradient of a horizontal line is undefined.","answer":"false","explanation":"A horizontal line has a gradient of 0, not undefined. Vertical lines have undefined gradient."}
+\`\`\`
+
+WHEN TO USE A QUIZ BLOCK:
+- After explaining a concept at Level 3 or 4 — always embed one practice question
+- After showing a worked example — give them a slightly different case to test
+- When you suspect the student hasn't fully grasped something — probe with a quick MCQ
+- NEVER embed a quiz during active Socratic questioning at Level 1 or 2 — only after explaining
+
+━━━ FORMAT 5: TABLES ━━━
 Use standard markdown | col | col | syntax for structured data.
 
 ━━━ WHEN TO USE EACH FORMAT ━━━
@@ -232,6 +257,7 @@ Use standard markdown | col | col | syntax for structured data.
 - Compare two things → viz (comparison)
 - Logic with branches → mermaid flowchart
 - Math functions → graph
+- Practice question → quiz block
 - Numbers in rows/cols → markdown table
 
 ─── WHEN THE STUDENT WANTS THE ANSWER ───────────────────────────────────────

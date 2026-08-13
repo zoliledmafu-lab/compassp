@@ -744,12 +744,20 @@ What function are we working with?`
 {"functions":["x^2-5*x+6"],"xRange":[-1,6],"title":"y = x² − 5x + 6","labels":["y = x² − 5x + 6 (our example)"]}
 \`\`\`
 
+*Hover over the graph to see exact values at any point.*
+
 See how it crosses the x-axis at x = 2 and x = 3? Those are the **roots** — the solutions.
 
 **Worked example:** Factorise x² − 5x + 6
 - Find two numbers that **multiply to 6** and **add to −5**
 - That's −2 and −3: (−2) × (−3) = 6 ✓ and (−2) + (−3) = −5 ✓
 - So x² − 5x + 6 = **(x − 2)(x − 3)**
+
+Quick check:
+
+\`\`\`quiz
+{"type":"mcq","question":"To factorise x² + 5x + 6, which pair of numbers do you need?","options":["Multiply to 6 and add to 5","Multiply to 5 and add to 6","Multiply to 6 and add to −5","Multiply to −6 and add to 5"],"answer":0,"explanation":"We need two numbers that multiply to c (which is 6) and add to b (which is 5). Those are 2 and 3: 2×3=6 and 2+3=5, so x²+5x+6 = (x+2)(x+3)."}
+\`\`\`
 
 **Now try your equation using the same method. What two numbers do you need?**`
     }
@@ -767,7 +775,13 @@ See how it crosses the x-axis at x = 2 and x = 3? Those are the **roots** — th
 
 The unit must be **squared** (cm²) because area is always 2D.
 
-**Now apply the same steps to your triangle. What values do you have for the base and height?**`
+Now try one yourself:
+
+\`\`\`quiz
+{"type":"fill","question":"A triangle has base 10 cm and height 6 cm. Its area is _____ cm².","answer":"30","hint":"Area = ½ × base × height. Work it out step by step.","explanation":"Area = ½ × 10 × 6 = ½ × 60 = 30 cm²"}
+\`\`\`
+
+**What values do you have for the base and height in your problem?**`
     }
     if (/pythagoras|hypotenuse/i.test(lower) || topic === 'pythagoras') {
       return `${frustrationPrefix}Let me walk through a similar example:\n\n**Example:** A right triangle has legs of 3 cm and 4 cm. Find the hypotenuse.\n\n**Step 1:** a² + b² = c² → 3² + 4² = c²\n**Step 2:** 9 + 16 = c²\n**Step 3:** c² = 25, so c = √25 = **5 cm**\n\n**Now try your triangle. Which sides do you know?**`
@@ -822,9 +836,11 @@ The **height must be perpendicular** (at 90°) to the base — not the slant sid
 {"type":"process","title":"Finding the area of a triangle","steps":[{"step":"Identify the base","detail":"Any side can be the base"},{"step":"Find the height","detail":"Must be perpendicular (90°) to the base"},{"step":"Apply the formula","detail":"Area = ½ × base × height"},{"step":"Write the unit","detail":"Area is always in squared units (cm², m²)"}]}
 \`\`\`
 
-**New practice problem:**
-A triangle has a base of 10 cm and a perpendicular height of 7 cm.
-Calculate its area. Show every step.`
+\`\`\`quiz
+{"type":"truefalse","question":"The height of a triangle is always the slant (diagonal) side.","answer":"false","explanation":"The height must be perpendicular (at 90°) to the base. It is not always one of the slant sides — it is a vertical measurement inside the triangle."}
+\`\`\`
+
+**Practice problem:** A triangle has a base of 10 cm and a perpendicular height of 7 cm. Calculate its area and show every step.`
     }
     if (/pythagoras|hypotenuse/i.test(lower) || topic === 'pythagoras') {
       return `${frustrationPrefix}Here is the full Pythagoras method:\n\n**Theorem:** In any right-angled triangle, **a² + b² = c²** where c is the hypotenuse.\n\n**Finding the hypotenuse:** c = √(a² + b²)\n**Finding a shorter side:** a = √(c² − b²)\n\n---\n\n**New practice problem:**\nA ladder 10 m long leans against a wall. Its base is 6 m from the wall. How high up the wall does it reach?\n\nDraw a diagram first, then show your working.`
